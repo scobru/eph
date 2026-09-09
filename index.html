@@ -186,7 +186,7 @@ const ENGINES = ["subtractive","fm","acid","noise","speech","karplus","supersaw"
 
 
 /* ---------- audio graph ---------- */
-let ac, master, revIn, revOut, conv, dlIn, dl, dlOut, lim, flt, running = false;
+let ac, master, revIn, revOut, conv, dlIn, dl, dlOut, lim, flt, out, running = false;
 const MAKEUP = 1.7;   // engines are conservative on their own; limiter catches the peaks
 function initAudio() {
   if (ac) return;
@@ -194,7 +194,16 @@ function initAudio() {
   lim = ac.createDynamicsCompressor();   // 4 poly tracks can stack past 0 dBFS
   lim.threshold.value = -4; lim.knee.value = 10; lim.ratio.value = 6;   // catch peaks, don't pump
   lim.attack.value = .003; lim.release.value = .25;
-  lim.connect(ac.destination);
+  // the compressor is not a brickwall: dense patches still poked past 1.0 and
+  // clipped at the output. this is transparent below -4.4 dB and asymptotic to 1.
+  const safe = ac.createWaveShaper(), n = 4096, c = new Float32Array(n), knee = .6;
+  for (let i = 0; i < n; i++) {
+    const x = i / (n - 1) * 2 - 1, m = Math.abs(x);
+    c[i] = Math.sign(x) * (m <= knee ? m : knee + (1 - knee) * Math.tanh((m - knee) / (1 - knee)));
+  }
+  safe.curve = c; safe.oversample = "2x";
+  out = safe;
+  lim.connect(safe); safe.connect(ac.destination);
   const tone = ac.createBiquadFilter(), sub = ac.createBiquadFilter();
   tone.type = "lowpass"; tone.frequency.value = 15000; tone.Q.value = .5;
   sub.type = "highpass"; sub.frequency.value = 28;
@@ -781,7 +790,7 @@ function recStartFn() {
     for (let c = 0; c < 2; c++) recChunks[c].push(new Float32Array(e.inputBuffer.getChannelData(c)));
   };
   const sink = ac.createGain(); sink.gain.value = 0;   // a ScriptProcessor is only pulled if it reaches the output
-  lim.connect(recNode); recNode.connect(sink); sink.connect(ac.destination);
+  out.connect(recNode); recNode.connect(sink); sink.connect(ac.destination);
   recStart = ac.currentTime;
   $("rec").classList.add("on"); $("rec").innerHTML = "&#9632; stop";
   recTick = setInterval(() => {
