@@ -1,0 +1,822 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EPH — ephemeral synth</title>
+<style>
+:root{
+  --bg:#0c0c0d; --panel:#141416; --line:#26262a; --fg:#e8e8e6; --dim:#7a7a80;
+  --hot:#e8402a; --ok:#68d391;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-size:13px;line-height:1.5;
+  display:flex;flex-direction:column;min-height:100vh}
+header{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;
+  align-items:baseline;gap:14px;flex-wrap:wrap}
+h1{font-size:14px;margin:0;letter-spacing:.3em;text-transform:uppercase}
+.sub{color:var(--dim)}
+main{flex:1;display:grid;grid-template-columns:minmax(260px,320px) 1fr;gap:1px;background:var(--line)}
+@media(max-width:820px){main{grid-template-columns:1fr}}
+section{background:var(--bg);padding:20px}
+#big{width:100%;aspect-ratio:1;max-width:260px;border-radius:50%;border:1px solid var(--line);
+  background:radial-gradient(circle at 38% 32%,#2a2a2e,#111);color:var(--fg);
+  font:inherit;letter-spacing:.25em;text-transform:uppercase;cursor:pointer;
+  transition:transform .06s,box-shadow .2s;box-shadow:0 0 0 0 rgba(232,64,42,0)}
+#big:hover{box-shadow:0 0 40px 0 rgba(232,64,42,.35)}
+#big:active{transform:scale(.97)}
+#big b{display:block;font-size:22px;letter-spacing:.3em}
+#big span{display:block;color:var(--dim);font-size:11px;margin-top:8px;letter-spacing:.1em}
+.seed{margin-top:18px;font-size:12px;color:var(--dim);word-break:break-all}
+.seed b{color:var(--hot);font-size:15px;letter-spacing:.08em}
+.row{display:flex;align-items:center;gap:10px;margin:10px 0}
+.row label{color:var(--dim);width:74px;flex:none;font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+input[type=range]{flex:1;accent-color:var(--hot);background:transparent}
+select,input[type=number],button.sm{background:var(--panel);color:var(--fg);border:1px solid var(--line);
+  padding:4px 6px;font:inherit;font-size:12px;border-radius:3px}
+button.sm{cursor:pointer}
+button.sm:hover{border-color:var(--hot)}
+button.sm:disabled{opacity:.3;cursor:default;border-color:var(--line)}
+#histv{color:var(--dim);font-size:11px}
+.tracks{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.tr{background:var(--panel);padding:12px 14px;display:grid;
+  grid-template-columns:auto 1fr;gap:4px 14px;align-items:center}
+.tr.off{opacity:.3}
+.tr h3{grid-column:1/-1;margin:0 0 4px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+  display:flex;gap:10px;align-items:center}
+.tr h3 em{font-style:normal;color:var(--hot)}
+.tr h3 small{color:var(--dim);font-weight:400;letter-spacing:.04em;text-transform:none}
+.steps{display:flex;gap:3px;flex-wrap:wrap}
+.st{width:11px;height:11px;border:1px solid var(--line);border-radius:2px}
+.st.on{background:#3a3a40}
+.st.cur{outline:1px solid var(--hot);outline-offset:1px}
+.st.hit{background:var(--hot)}
+.meta{color:var(--dim);font-size:11px}
+footer{border-top:1px solid var(--line);padding:10px 20px;color:var(--dim);font-size:11px;
+  display:flex;gap:18px;flex-wrap:wrap}
+#midi.on{color:var(--ok)}
+#rec.on{border-color:var(--hot);color:var(--hot)}
+#rect{font-variant-numeric:tabular-nums}
+kbd{border:1px solid var(--line);border-radius:3px;padding:0 4px}
+.by{margin-left:auto}
+.by a{color:var(--dim);text-decoration:none;border-bottom:1px solid var(--line)}
+.by a:hover{color:var(--hot);border-color:var(--hot)}
+</style>
+</head>
+<body>
+<header>
+  <h1>eph</h1>
+  <span class="sub">one button, 4 294 967 296 ideas</span>
+</header>
+<main>
+  <section>
+    <button id="big"><b>eph</b><span>press to forget</span></button>
+    <div class="seed">seed <b id="seedv">—</b>
+      <button class="sm" id="prev" title="previous patch">&#8592;</button>
+      <button class="sm" id="next" title="next patch">&#8594;</button>
+      <span id="histv"></span>
+      <br><span id="patchv"></span></div>
+    <div class="row"><label>volume</label><input id="vol" type="range" min="0" max="1" step=".01" value=".8"></div>
+    <div class="row"><label>reverb</label><input id="rev" type="range" min="0" max="1" step=".01" value=".35"></div>
+    <div class="row"><label>filter</label><input id="cut" type="range" min="0" max="1" step=".001" value="1"><span id="cutv" class="meta">open</span></div>
+    <div class="row"><label>res</label><input id="res" type="range" min="0" max="1" step=".01" value="0"></div>
+    <div class="row"><label>delay</label><input id="dly" type="range" min="0" max="1" step=".01" value=".3"></div>
+    <div class="row"><label>tempo</label><input id="bpm" type="range" min="50" max="180" step="1" value="110"><span id="bpmv" class="meta">110</span></div>
+    <div class="row"><label>tonic</label>
+      <select id="tonic"></select>
+      <button class="sm" id="run">stop</button>
+    </div>
+    <div class="row"><label>rec</label>
+      <button class="sm" id="rec">&#9679; record</button>
+      <span id="rect" class="meta"></span>
+    </div>
+    <div class="row"><label>seed</label>
+      <input id="seedin" type="number" min="0" max="4294967295" step="1" style="flex:1">
+      <button class="sm" id="load">load</button>
+    </div>
+  </section>
+  <section>
+    <div class="tracks" id="tracks"></div>
+  </section>
+</main>
+<footer>
+  <span><kbd>space</kbd> randomize</span>
+  <span><kbd>&#8592;</kbd><kbd>&#8594;</kbd> history</span>
+  <span><kbd>1</kbd>–<kbd>4</kbd> mute track</span>
+  <span><kbd>r</kbd> rec</span>
+  <span>cc74 filter · cc71 res</span>
+  <span id="midi">midi: —</span>
+  <span id="scalev"></span>
+  <span class="by">by <a href="https://github.com/scobru" target="_blank" rel="noopener">scobru</a>
+    · <a href="https://github.com/scobru/eph" target="_blank" rel="noopener">source</a></span>
+</footer>
+<script>
+"use strict";
+/* ---------- music: pure logic ----------
+   Everything between the MUSIC markers is plain functions with no audio
+   and no dom, so `node test.js` can pull this block straight out of the
+   page and check it. Keep the markers.                                 */
+// >>> MUSIC
+const mulberry32 = a => () => {
+  a = a + 0x6D2B79F5 | 0;
+  let t = Math.imul(a ^ a >>> 15, 1 | a);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+  return ((t ^ t >>> 14) >>> 0) / 4294967296;
+};
+
+const SCALES = {
+  major:[0,2,4,5,7,9,11], minor:[0,2,3,5,7,8,10], "harmonic minor":[0,2,3,5,7,8,11],
+  blues:[0,3,5,6,7,10], "major pentatonic":[0,2,4,7,9], "minor pentatonic":[0,3,5,7,10],
+  dorian:[0,2,3,5,7,9,10], phrygian:[0,1,3,5,7,8,10], lydian:[0,2,4,6,7,9,11],
+  mixolydian:[0,2,4,5,7,9,10], locrian:[0,1,3,5,6,8,10], "whole tone":[0,2,4,6,8,10],
+  "double harmonic":[0,1,4,5,7,8,11], "hungarian minor":[0,2,3,6,7,8,11],
+  "phrygian dominant":[0,1,4,5,7,8,10], hirajoshi:[0,2,3,7,8], "in sen":[0,1,5,7,10],
+  prometheus:[0,2,4,6,9,10], octatonic:[0,2,3,5,6,8,9,11], persian:[0,1,4,5,6,8,11]
+};
+const SCALE_NAMES = Object.keys(SCALES);
+
+// euclidean rhythm (bresenham form)
+const euclid = (steps, pulses, rot) => {
+  // bresenham spread, not full bjorklund — same pattern set at these sizes.
+  // comparing against i-1 puts each pulse at the START of its group, so step 0
+  // always fires; comparing against i+1 puts it at the end and silently shifts
+  // every pattern off the downbeat.
+  const p = Array.from({ length: steps }, (_, i) =>
+    Math.floor(i * pulses / steps) !== Math.floor((i - 1) * pulses / steps) ? 1 : 0);
+  return p.map((_, i) => p[(i + rot) % steps]);
+};
+
+// motif, not white noise: a short cell, tiled, lightly varied. random notes
+// per step sound like a machine; a repeated cell sounds like a part.
+function melody(r, len, role, nDeg) {
+  if (role === "perc") return Array.from({ length: len }, () => Math.floor(r() * nDeg));
+  const span = nDeg * 2, clamp = n => Math.max(0, Math.min(span, n));
+  if (role === "bass") {
+    const roots = [0, 0, 0, 2, 4, 4, nDeg];          // root / third / fifth / octave
+    const cell = r() < .5 ? 4 : 8;
+    const m = Array.from({ length: cell }, () => roots[Math.floor(r() * roots.length)]);
+    if (m.every(n => n === m[0])) m[cell - 1] = m[0] === 4 ? 0 : 4;   // never a one-note bass
+    return Array.from({ length: len }, (_, i) => m[i % cell]);
+  }
+  const cell = [2, 3, 4, 4][Math.floor(r() * 4)];
+  const m = []; let cur = Math.floor(r() * nDeg);
+  for (let i = 0; i < cell; i++) {
+    m.push(cur);
+    const jump = r() < .8 ? (r() < .5 ? 1 : 2) : 4;  // steps mostly, leaps rarely
+    cur = clamp(cur + (r() < .5 ? -jump : jump));
+  }
+  return Array.from({ length: len }, (_, i) => {
+    let n = m[i % cell];
+    if (r() < .18) n = clamp(n + (r() < .5 ? -1 : 1));       // variation
+    if (i >= cell && r() < .12) n = clamp(n + 2);            // sequence upward
+    return n;
+  });
+}
+
+const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+
+// scale degree index -> midi note. indexes past the end of the scale wrap
+// upward by an octave, so a motif can span more than one octave.
+const noteFor = (deg, idx, oct, tonic) =>
+  12 * oct + tonic + deg[idx % deg.length] + 12 * Math.floor(idx / deg.length);
+// <<< MUSIC
+const NOTES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+const ENGINES = ["subtractive","fm","acid","noise","speech","karplus","supersaw","additive"];
+
+
+/* ---------- audio graph ---------- */
+let ac, master, revIn, revOut, conv, dlIn, dl, dlOut, lim, flt, running = false;
+const MAKEUP = 1.7;   // engines are conservative on their own; limiter catches the peaks
+function initAudio() {
+  if (ac) return;
+  ac = new (window.AudioContext || window.webkitAudioContext)();
+  lim = ac.createDynamicsCompressor();   // 4 poly tracks can stack past 0 dBFS
+  lim.threshold.value = -4; lim.knee.value = 10; lim.ratio.value = 6;   // catch peaks, don't pump
+  lim.attack.value = .003; lim.release.value = .25;
+  lim.connect(ac.destination);
+  const tone = ac.createBiquadFilter(), sub = ac.createBiquadFilter();
+  tone.type = "lowpass"; tone.frequency.value = 15000; tone.Q.value = .5;
+  sub.type = "highpass"; sub.frequency.value = 28;
+  flt = ac.createBiquadFilter(); flt.type = "lowpass";     // the one you play
+  flt.frequency.value = cutHz(+cut.value); flt.Q.value = .7 + +res.value * 13;
+  flt.connect(tone); tone.connect(sub); sub.connect(lim);
+  master = ac.createGain(); master.gain.value = +vol.value * MAKEUP; master.connect(flt);
+  conv = ac.createConvolver(); conv.buffer = impulse(2.6, 2.4);
+  revIn = ac.createGain(); revOut = ac.createGain();
+  revOut.gain.value = +rev.value;
+  revIn.connect(conv); conv.connect(revOut); revOut.connect(master);
+  dlIn = ac.createGain(); dl = ac.createDelay(2);
+  const dlFb = ac.createGain(), dlHp = ac.createBiquadFilter(), dlLp = ac.createBiquadFilter();
+  dlOut = ac.createGain();
+  dlFb.gain.value = .45; dlOut.gain.value = +dly.value;
+  dlHp.type = "highpass"; dlHp.frequency.value = 280;   // repeats thin out, dub style
+  dlLp.type = "lowpass"; dlLp.frequency.value = 3200;
+  dlIn.connect(dl); dl.connect(dlHp); dlHp.connect(dlLp); dlLp.connect(dlFb); dlFb.connect(dl);
+  dl.connect(dlOut); dlOut.connect(master); dlOut.connect(revIn);   // echoes bloom into the room
+}
+function impulse(dur, decay) {
+  const sr = ac.sampleRate, n = Math.floor(sr * dur), pre = Math.floor(sr * .012);
+  const b = ac.createBuffer(2, n, sr);
+  for (let c = 0; c < 2; c++) {
+    const d = b.getChannelData(c);
+    let lp = 0;
+    for (let i = 0; i < n; i++) {
+      const t = i / n;
+      lp += (.4 - .34 * t) * (Math.random() * 2 - 1 - lp);   // tail darkens as it decays
+      d[i] = i < pre ? 0 : lp * Math.pow(1 - t, decay);      // pre-delay: room, not metal
+    }
+    for (let k = 0; k < 6; k++) {                            // early reflections
+      const at = pre + Math.floor(sr * (.008 + Math.random() * .05));
+      if (at < n) d[at] += (Math.random() * 2 - 1) * .35;
+    }
+  }
+  return b;
+}
+let noiseBuf;
+function noise() {
+  if (!noiseBuf) {
+    noiseBuf = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  const s = ac.createBufferSource(); s.buffer = noiseBuf; s.loop = true; return s;
+}
+function env(g, t, dur, peak, a, d, s, r) {
+  const p = g.gain, atk = a * (.7 + Math.random() * .6);   // no two notes attack alike
+  const end = t + Math.max(atk + d, dur);
+  p.setValueAtTime(0, t);
+  p.linearRampToValueAtTime(peak, t + atk);
+  p.setTargetAtTime(Math.max(peak * s, 1e-4), t + atk, d / 3);   // exponential decay
+  p.setTargetAtTime(1e-4, end, r / 3);                           // exponential release
+  p.linearRampToValueAtTime(0, end + r + .04);                   // setTarget never reaches 0
+  return end + r + .06;
+}
+const stop = (nodes, t) => nodes.forEach(n => { try { n.stop(t); } catch (e) {} });
+
+// cut a held voice short: cancel its scheduled tail and fade out from here
+function release(v, t) {
+  if (!v) return;
+  v.g.gain.cancelScheduledValues(t);
+  v.g.gain.setValueAtTime(v.g.gain.value, t);
+  v.g.gain.setTargetAtTime(0, t, Math.max(.02, v.rel) / 3);
+  stop(v.nodes, t + Math.max(.02, v.rel) + .05);      // a later stop() overrides the scheduled one
+}
+
+function body(t, f, dur, vel, out) {
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.frequency.value = f > 130 ? f / 2 : f;      // keep the layer in the 40-130 Hz range
+  o.connect(g); g.connect(out);
+  const e = env(g, t, dur * .9, vel * .18, .012, .12, .5, .12);
+  o.start(t); stop([o], e);
+}
+
+/* ---------- engines ---------- */
+// each: (t, freq, dur, vel, out, p)
+const VOWELS = [[730,1090,2440],[270,2290,3010],[300,870,2240],[660,1720,2410],[400,1700,2600]];
+const play = {
+  subtractive(t, f, dur, vel, out, p) {
+    const o = ac.createOscillator(), fl = ac.createBiquadFilter(), g = ac.createGain();
+    o.type = p.wave; o.frequency.value = f;
+    fl.type = "lowpass"; fl.Q.value = p.q;
+    const br = .45 + vel;                                  // velocity -> brightness
+    fl.frequency.setValueAtTime(Math.min(16000, f * p.co * 4 * br), t);
+    fl.frequency.exponentialRampToValueAtTime(Math.max(80, f * p.co * br), t + dur);
+    o.connect(fl); fl.connect(g); g.connect(out);
+    const e = env(g, t, dur, vel * .35, .006, p.dec, p.sus, p.rel);
+    o.start(t); stop([o], e);
+    return { g, nodes: [o], rel: p.rel };
+  },
+  fm(t, f, dur, vel, out, p) {
+    const c = ac.createOscillator(), m = ac.createOscillator(), mg = ac.createGain(), g = ac.createGain();
+    c.frequency.value = f; m.frequency.value = f * p.ratio;
+    mg.gain.setValueAtTime(f * p.index, t);
+    mg.gain.exponentialRampToValueAtTime(Math.max(1, f * p.index * .05), t + dur);
+    m.connect(mg); mg.connect(c.frequency); c.connect(g); g.connect(out);
+    const e = env(g, t, dur, vel * .3, .004, p.dec, p.sus, p.rel);
+    c.start(t); m.start(t); stop([c, m], e);
+    return { g, nodes: [c, m], rel: p.rel };
+  },
+  acid(t, f, dur, vel, out, p) {
+    const o = ac.createOscillator(), fl = ac.createBiquadFilter(), g = ac.createGain();
+    o.type = "sawtooth"; o.frequency.setValueAtTime(f, t);
+    fl.type = "lowpass"; fl.Q.value = 14 + p.q * 2;
+    fl.frequency.setValueAtTime(Math.min(16000, f * (4 + p.co * 12) * (.45 + vel)), t);
+    fl.frequency.exponentialRampToValueAtTime(Math.max(60, f * 1.2), t + dur * .9);
+    o.connect(fl); fl.connect(g); g.connect(out);
+    const e = env(g, t, dur * .8, vel * .28, .003, .05, .5, .05);
+    o.start(t); stop([o], e);
+    return { g, nodes: [o], rel: .05 };
+  },
+  noise(t, f, dur, vel, out, p) {
+    const n = noise(), fl = ac.createBiquadFilter(), g = ac.createGain();
+    fl.type = p.q > 4 ? "bandpass" : "highpass"; fl.Q.value = p.q;
+    fl.frequency.setValueAtTime(f * 3, t);
+    fl.frequency.exponentialRampToValueAtTime(Math.max(100, f * p.co), t + dur);
+    n.connect(fl); fl.connect(g); g.connect(out);
+    const e = env(g, t, dur * .5, vel * .22, .002, .04, .3, .08);
+    n.start(t); stop([n], e);
+    return { g, nodes: [n], rel: .08 };
+  },
+  speech(t, f, dur, vel, out, p) {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = "sawtooth"; o.frequency.setValueAtTime(f, t);
+    o.frequency.linearRampToValueAtTime(f * (1 + (p.co - .5) * .06), t + dur);
+    const iv = p.vowel + Math.round(12 * Math.log2(f / 440));   // vowel follows pitch
+    const v = VOWELS[((iv % VOWELS.length) + VOWELS.length) % VOWELS.length];
+    v.forEach((fq, i) => {
+      const b = ac.createBiquadFilter(), bg = ac.createGain();
+      b.type = "bandpass"; b.frequency.value = fq; b.Q.value = 8 + i * 4;
+      bg.gain.value = [1, .5, .25][i];
+      o.connect(b); b.connect(bg); bg.connect(g);
+    });
+    g.connect(out);
+    const e = env(g, t, dur, vel * .5, .03, .1, .8, .12);
+    o.start(t); stop([o], e);
+    return { g, nodes: [o], rel: .12 };
+  },
+  karplus(t, f, dur, vel, out, p) {
+    const sr = ac.sampleRate, n = Math.max(2, Math.round(sr / f));
+    const len = Math.ceil(sr * Math.min(2.5, dur + 1.2));
+    const buf = ac.createBuffer(1, len, sr), d = buf.getChannelData(0);
+    const damp = Math.min(.4995, .485 + p.co * .005);   // >0.5 = feedback gain >1 = blow-up
+    for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    for (let i = n; i < len; i++) d[i] = damp * (d[i - n] + d[i - n + 1]);
+    const s = ac.createBufferSource(), g = ac.createGain();
+    s.buffer = buf; s.connect(g); g.connect(out);
+    g.gain.setValueAtTime(vel * .5, t);
+    g.gain.exponentialRampToValueAtTime(.001, t + Math.min(2.4, dur + 1));
+    s.start(t); stop([s], t + Math.min(2.5, dur + 1.1));
+    return { g, nodes: [s], rel: .3 };   // a plucked string ignores note-off anyway
+  },
+  supersaw(t, f, dur, vel, out, p) {
+    const g = ac.createGain(), fl = ac.createBiquadFilter(), os = [];
+    fl.type = "lowpass"; fl.Q.value = 1;
+    fl.frequency.setValueAtTime(Math.min(14000, f * p.co * 6 * (.45 + vel)), t);
+    for (let i = 0; i < 7; i++) {
+      const o = ac.createOscillator();
+      o.type = "sawtooth";
+      const jitter = p.detune * (.85 + Math.random() * .3) + (Math.random() - .5) * 4;
+      o.frequency.value = f * Math.pow(2, ((i - 3) * jitter) / 1200);
+      o.detune.value = (Math.random() - .5) * 6;         // each voice drifts on its own
+      o.connect(fl); os.push(o);
+    }
+    fl.connect(g); g.connect(out);
+    const e = env(g, t, dur, vel * .12, .02, p.dec, p.sus, p.rel);
+    os.forEach(o => o.start(t)); stop(os, e);
+    return { g, nodes: os, rel: p.rel };
+  },
+  additive(t, f, dur, vel, out, p) {
+    const g = ac.createGain(), os = [];
+    p.amps.forEach((a, i) => {
+      if (a < .04) return;
+      const o = ac.createOscillator(), og = ac.createGain();
+      o.frequency.value = f * (i + 1) * (1 + i * p.inh);
+      og.gain.setValueAtTime(a, t);
+      og.gain.exponentialRampToValueAtTime(.0001, t + dur * (1 - i * .07) + .1);
+      o.connect(og); og.connect(g); os.push(o);
+    });
+    g.connect(out);
+    const e = env(g, t, dur, vel * .22, .01, p.dec, p.sus, p.rel);
+    os.forEach(o => o.start(t)); stop(os, e);
+    return { g, nodes: os, rel: p.rel };
+  }
+};
+
+/* ---------- fx ----------
+   one insert chain per track, drawn from the seed. this is where the
+   strangeness lives: engines stay musical, the fx make them alien.     */
+// weighted: crush and ring are the harshest, so they come up half as often
+const FX_NAMES = ["drive", "drive", "comb", "comb", "wobble", "wobble",
+                  "trem", "trem", "crush", "ring"];
+const FX = {
+  drive(r) {                                   // tanh saturation, or a wavefolder
+    const ws = ac.createWaveShaper(), trim = ac.createGain();
+    const k = 3 + r() * 40, fold = r() < .35, n = 1024, c = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      const x = i / (n - 1) * 2 - 1;
+      c[i] = fold ? Math.sin(x * (1 + k * .15) * Math.PI) * .85 : Math.tanh(x * k);
+    }
+    ws.curve = c; ws.oversample = "2x";
+    trim.gain.value = fold ? .45 : .6;         // shaping adds a lot of level back
+    ws.connect(trim);
+    return { in: ws, out: trim, label: fold ? "fold" : "drive" };
+  },
+  crush(r) {                                   // staircase curve = bit reduction
+    const ws = ac.createWaveShaper(), steps = 5 + Math.floor(r() * 12), n = 4096;
+    const c = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      const x = i / (n - 1) * 2 - 1;
+      c[i] = Math.round(x * steps) / steps;
+    }
+    ws.curve = c; ws.oversample = "4x";                  // quantising aliases hard otherwise
+    const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 7000;
+    ws.connect(lp);
+    return { in: ws, out: lp, label: "crush" + steps };
+  },
+  ring(r) {                                    // amplitude modulation, inharmonic sidebands
+    const g = ac.createGain(), o = ac.createOscillator(), amt = ac.createGain();
+    const f = 25 + r() * r() * 1200;
+    g.gain.value = .25;                        // .25 dry + .75 modulated = AM, not full ring
+    o.type = r() < .5 ? "sine" : "triangle"; o.frequency.value = f;
+    amt.gain.value = .75; o.connect(amt); amt.connect(g.gain); o.start();
+    return { in: g, out: g, lfos: [o], label: "ring " + Math.round(f) };
+  },
+  comb(r) {                                    // short feedback delay = flanger / metallic
+    const inp = ac.createGain(), d = ac.createDelay(.06), fb = ac.createGain();
+    const mix = ac.createGain(), lfo = ac.createOscillator(), amt = ac.createGain();
+    const t = .0015 + r() * .012;
+    d.delayTime.value = t; fb.gain.value = .45 + r() * .4;   // <1 or it runs away
+    lfo.frequency.value = .05 + r() * 2.5; amt.gain.value = t * .7;
+    lfo.connect(amt); amt.connect(d.delayTime); lfo.start();
+    const wet = ac.createGain(); wet.gain.value = .55;   // dry + wet was ~2x
+    inp.connect(mix); inp.connect(d); d.connect(fb); fb.connect(d); d.connect(wet); wet.connect(mix);
+    return { in: inp, out: mix, lfos: [lfo], label: "comb" };
+  },
+  wobble(r) {                                  // lfo on a resonant filter
+    const f = ac.createBiquadFilter(), lfo = ac.createOscillator(), amt = ac.createGain();
+    const base = 180 + r() * 1600;
+    f.type = r() < .5 ? "lowpass" : "bandpass"; f.Q.value = 3 + r() * 9;
+    f.frequency.value = base;
+    lfo.frequency.value = .08 + r() * 5; amt.gain.value = base * .85;
+    lfo.connect(amt); amt.connect(f.frequency); lfo.start();
+    return { in: f, out: f, lfos: [lfo], label: "wobble" };
+  },
+  trem(r) {                                    // gain lfo: tremolo, or a stutter gate
+    const g = ac.createGain(), lfo = ac.createOscillator(), amt = ac.createGain();
+    const sq = r() < .4;
+    g.gain.value = sq ? .5 : .6; amt.gain.value = sq ? .5 : .4;
+    lfo.type = sq ? "square" : "sine"; lfo.frequency.value = .2 + r() * 9;
+    lfo.connect(amt); amt.connect(g.gain); lfo.start();
+    return { in: g, out: g, lfos: [lfo], label: sq ? "gate" : "trem" };
+  }
+};
+
+/* ---------- patch generation ----------
+   roles give each track a register and a rhythmic job. without them four
+   random voices pile into the same octave and the patch is mud.          */
+const ROLES = ["lead", "bass", "harmony", "perc"];   // order = which roles appear first
+const ROLE_ENGINES = {
+  bass:    ["subtractive", "fm", "acid", "karplus", "additive"],
+  lead:    ["fm", "speech", "supersaw", "acid", "karplus", "subtractive", "additive"],
+  harmony: ["supersaw", "additive", "speech", "subtractive", "fm"],
+  perc:    ["noise", "noise", "karplus", "fm", "subtractive"]
+};
+const VOICINGS = [[0, 2, 4], [0, 4], [0, 2, 4, 6], [0, 3, 5], [0, 2, 6]];
+const DENSITY = { bass: [.2, .5], harmony: [.15, .4], lead: [.3, .7], perc: [.3, .85] };
+const OCT = { bass: 3, harmony: 3, lead: 4, perc: 4 };   // C2 / C2 / C3 floors, +2 oct of scale on top
+const HP = { bass: 25, harmony: 110, lead: 130, perc: 400 };   // carve room for the bass
+
+let patch = null, tonic = 0;
+function genPatch(seed) {
+  const r = mulberry32(seed), pick = a => a[Math.floor(r() * a.length)];
+  const scale = pick(SCALE_NAMES), deg = SCALES[scale];
+  const nTracks = 1 + Math.floor(r() * 4);
+  const pool = ENGINES.slice();                      // distinct engine per track
+  const tracks = ROLES.map((role, i) => {
+    const cand = ROLE_ENGINES[role].filter(e => pool.includes(e));
+    const engine = pick(cand.length ? cand : pool);
+    pool.splice(pool.indexOf(engine), 1);
+    const steps = role === "bass" ? pick([8, 16]) : pick([8, 12, 16, 16]);
+    const dens = DENSITY[role];
+    return {
+      role, engine, steps,
+      active: i < nTracks,
+      div: role === "perc" ? pick([2, 4]) : role === "harmony" ? 1 : pick([1, 2, 2, 4]),
+      pulses: Math.max(1, Math.round(steps * (dens[0] + r() * (dens[1] - dens[0])))),
+      rot: Math.floor(r() * steps),
+      oct: OCT[role] + (role !== "bass" && r() < .35 ? 1 : 0),   // bass stays put
+      gate: role === "bass" ? .8 + r() * .8 : role === "harmony" ? 1 + r() * 2
+          : role === "perc" ? .15 + r() * .3 : .3 + r() * .9,
+      vol: (role === "perc" ? .35 : .5) + r() * .45,
+      send: role === "bass" ? r() * .25 : r() * r() * 1.4,
+      poly: role === "harmony" ? r() < .8 : role === "lead" ? r() < .25 : false,
+      voicing: pick(VOICINGS),
+      hp: HP[role],
+      ftype: role === "bass" ? "lowpass"
+           : ["lowpass", "lowpass", "lowpass", "highpass", "bandpass"][Math.floor(r() * 5)],
+      fcut: role === "bass" ? .55 + r() * .3 : .45 + r() * .55,   // 0..1, ear-scaled
+      fq: r() < .5 ? r() * .25 : r() * .75,                       // mostly gentle, sometimes not
+      fx: Array.from({ length: r() < .2 ? 0 : r() < .78 ? 1 : 2 },
+                     () => FX_NAMES[Math.floor(r() * FX_NAMES.length)]),
+      dsend: role === "bass" ? 0                       // echoes on a bassline only blur it
+           : role === "perc" ? (r() < .6 ? .25 + r() * .55 : 0)
+           : role === "lead" ? (r() < .5 ? .2 + r() * .5 : 0)
+           : (r() < .3 ? r() * .35 : 0),                 // pads mask their own echoes
+      pan: role === "bass" ? 0 : (r() * 2 - 1) * (role === "perc" ? .7 : .45),
+      seq: melody(r, steps, role, deg.length),
+      p: {
+        wave: pick(["sawtooth", "square", "triangle"]),
+        q: 1 + r() * 9, co: (.3 + r() * 3) * (role === "bass" ? .4 : 1),
+        dec: .03 + r() * .5, sus: r() * .7, rel: .05 + r() * .6,
+        ratio: pick([.5, 1, 1.5, 2, 3, 3.5, 5, 7]), index: 1 + r() * 9,
+        detune: 6 + r() * 30, vowel: Math.floor(r() * VOWELS.length), inh: r() * .01,
+        amps: Array.from({ length: 10 }, (_, k) => Math.pow(r(), 1 + k * .4))
+      },
+      mute: false
+    };
+  });
+  return {
+    seed, scale, tracks,
+    bpm: 70 + Math.floor(r() * 80),
+    swing: r() < .5 ? 0 : .04 + r() * .12,
+    room: .5 + r() * 4,                      // reverb decay, seconds
+    dlDiv: [.5, .75, 1, 1.5][Math.floor(r() * 4)]   // delay time, in beats
+  };
+}
+
+
+/* ---------- sequencer ---------- */
+let step = 0, nextTime = 0, timer = null;
+const LOOKAHEAD = .1;
+function scheduler() {
+  while (nextTime < ac.currentTime + LOOKAHEAD) {
+    const stepDur = 60 / patch.bpm / 4;              // 16th grid
+    const swing = (step % 2) ? patch.swing * stepDur : 0;
+    // accent from the bar, not from each track's own step count
+    const accent = step % 16 === 0 ? .35 : step % 4 === 0 ? .15 : 0;
+    patch.tracks.forEach((tr, i) => {
+      if (!tr.active || tr.mute || override[i]) return;
+      const per = 4 / tr.div;                        // grid steps per track step
+      if (step % per) return;
+      const s = Math.floor(step / per) % tr.steps;
+      if (!tr.pattern[s]) return;
+      const dur = stepDur * per * tr.gate;
+      const t = nextTime + swing + (Math.random() - .5) * .006;   // humanize
+      const vel = Math.min(1, .5 + accent + Math.random() * .12);
+      const d = SCALES[patch.scale];
+      (tr.poly ? tr.voicing : [0]).forEach(off => {
+        const m = noteFor(d, tr.seq[s] + off, tr.oct, tonic);
+        const drift = tr.role === "perc" ? 1 : 1 + (Math.random() - .5) * .003;  // ±2.5 cents
+        play[tr.engine](t, mtof(m) * drift, dur, vel, tr.out, tr.p);
+        if (tr.role === "bass" && !off) body(t, mtof(m), dur, vel, tr.out);
+      });
+      flash(i, s);
+    });
+    step++;
+    nextTime += stepDur;
+  }
+}
+let wired = [], lfos = [];
+const syncDelay = () => dl.delayTime.value = Math.min(2, 60 / patch.bpm * patch.dlDiv);
+function wireTracks() {
+  wired.forEach(n => n.disconnect());                // drop the previous patch's graph
+  lfos.forEach(o => { try { o.stop(); } catch (e) {} });
+  wired = []; lfos = [];
+  conv.buffer = impulse(patch.room, 2.4);
+  syncDelay();
+  patch.tracks.forEach(tr => {
+    tr.pattern = euclid(tr.steps, tr.pulses, tr.rot);
+    const hp = ac.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = tr.hp;
+    const pan = ac.createStereoPanner(); pan.pan.value = tr.pan;   // bass centred, rest spread
+    tr.out = ac.createGain(); tr.out.gain.value = tr.vol;
+    tr.snd = ac.createGain(); tr.snd.gain.value = tr.send;
+    tr.dly = ac.createGain(); tr.dly.gain.value = tr.dsend;
+    tr.flt = ac.createBiquadFilter();
+    tr.flt.type = tr.ftype; tr.flt.frequency.value = cutHz(tr.fcut);
+    tr.flt.Q.value = .7 + tr.fq * 13;
+    const fr = mulberry32((patch.seed ^ tr.steps * 2654435761 ^ tr.hp) >>> 0);
+    tr.fxLabels = [];
+    let node = tr.out;                                 // out -> fx... -> hp -> pan
+    tr.fx.forEach(name => {
+      const f = FX[name](fr);
+      node.connect(f.in); node = f.out;
+      tr.fxLabels.push(f.label);
+      wired.push(f.in, f.out);
+      (f.lfos || []).forEach(o => { lfos.push(o); wired.push(o); });
+    });
+    node.connect(tr.flt); tr.flt.connect(hp); hp.connect(pan); pan.connect(master);
+    pan.connect(tr.snd); tr.snd.connect(revIn);
+    pan.connect(tr.dly); tr.dly.connect(dlIn);
+    wired.push(tr.out, tr.flt, hp, pan, tr.snd, tr.dly);
+  });
+}
+
+/* ---------- ui ---------- */
+const $ = id => document.getElementById(id);
+const vol = $("vol"), rev = $("rev"), bpm = $("bpm"), dly = $("dly");
+const cut = $("cut"), res = $("res");
+const cutHz = x => 30 * Math.pow(20000 / 30, x);        // ear-linear sweep, not linear Hz
+function setCut() {
+  const hz = cutHz(+cut.value);
+  if (flt) flt.frequency.setTargetAtTime(hz, ac.currentTime, .01);   // no zipper noise
+  $("cutv").textContent = +cut.value > .995 ? "open" : Math.round(hz) + " Hz";
+}
+function setRes() { if (flt) flt.Q.setTargetAtTime(.7 + +res.value * 13, ac.currentTime, .01); }
+cut.oninput = setCut; res.oninput = setRes;
+NOTES.forEach((n, i) => tonicSel(n, i));
+function tonicSel(n, i) {
+  const o = document.createElement("option"); o.value = i; o.textContent = n; $("tonic").append(o);
+}
+function render() {
+  $("seedv").textContent = patch.seed.toString().padStart(10, "0");
+  $("seedin").value = patch.seed;
+  $("scalev").textContent = "scale: " + patch.scale;
+  $("histv").textContent = hist.length ? (hpos + 1) + "/" + hist.length : "";
+  $("prev").disabled = hpos <= 0;
+  $("next").disabled = hpos >= hist.length - 1;
+  $("patchv").textContent = patch.tracks.filter(t => t.active).length + " voices · " + patch.scale +
+    " · " + patch.bpm + " bpm" + (patch.swing ? " · swing" : "");
+  bpm.value = patch.bpm; $("bpmv").textContent = patch.bpm;
+  $("tracks").innerHTML = "";
+  patch.tracks.forEach((tr, i) => {
+    const el = document.createElement("div");
+    el.className = "tr" + (tr.active && !tr.mute ? "" : " off");
+    el.innerHTML =
+      '<h3>' + tr.role + ' <em>' + (tr.active ? tr.engine : "—") + '</em>' +
+      '<small>E(' + tr.pulses + ',' + tr.steps + ') · 1/' + (4 * tr.div) + ' · oct ' + tr.oct + (tr.pan ? " · pan " + (tr.pan > 0 ? "R" : "L") : "") +
+      (tr.poly ? " · poly" : "") +
+      (tr.fxLabels.length ? " · " + tr.fxLabels.join(" > ") : "") + '</small></h3>' +
+      '<div class="meta">seq</div><div class="steps" id="st' + i + '"></div>' +
+      '<div class="meta">vol</div><input type="range" min="0" max="1" step=".01" value="' + tr.vol + '" data-v="' + i + '">' +
+      '<div class="meta">rev</div><input type="range" min="0" max="1" step=".01" value="' + tr.send + '" data-s="' + i + '">' +
+      '<div class="meta">dly</div><input type="range" min="0" max="1" step=".01" value="' + tr.dsend + '" data-d="' + i + '">' +
+      '<div class="meta">' + tr.ftype.slice(0, 2) + 'f</div>' +
+      '<input type="range" min="0" max="1" step=".001" value="' + tr.fcut + '" data-f="' + i + '">';
+    $("tracks").append(el);
+    const st = el.querySelector("#st" + i);
+    tr.pattern.forEach(on => {
+      const d = document.createElement("div"); d.className = "st" + (on ? " on" : ""); st.append(d);
+    });
+  });
+}
+function flash(i, s) {
+  const st = $("st" + i); if (!st) return;
+  const d = st.children[s]; if (!d) return;
+  d.classList.add("hit");
+  setTimeout(() => d.classList.remove("hit"), 110);
+}
+$("tracks").addEventListener("input", e => {
+  const v = e.target.dataset.v, s = e.target.dataset.s, d = e.target.dataset.d, f = e.target.dataset.f;
+  if (f !== undefined) patch.tracks[f].flt.frequency.setTargetAtTime(cutHz(+e.target.value), ac.currentTime, .01);
+  if (v !== undefined) patch.tracks[v].out.gain.value = +e.target.value;
+  if (s !== undefined) patch.tracks[s].snd.gain.value = +e.target.value;
+  if (d !== undefined) patch.tracks[d].dly.gain.value = +e.target.value;
+});
+vol.oninput = () => master && (master.gain.value = +vol.value * MAKEUP);
+rev.oninput = () => revOut && (revOut.gain.value = +rev.value);
+dly.oninput = () => dlOut && (dlOut.gain.value = +dly.value);
+bpm.oninput = () => { patch.bpm = +bpm.value; $("bpmv").textContent = bpm.value; syncDelay(); };
+$("tonic").onchange = e => tonic = +e.target.value;
+$("run").onclick = () => running ? halt() : start();
+$("load").onclick = () => load(+$("seedin").value >>> 0);
+$("prev").onclick = e => { e.target.blur(); histGo(-1); };
+$("next").onclick = e => { e.target.blur(); histGo(1); };
+$("big").onclick = () => load(Math.floor(Math.random() * 4294967296));
+
+// the hardware loses a patch forever; the software has the seed in hand, so
+// not being able to step back was just a missing feature, not the concept.
+let hist = [], hpos = -1;
+const HIST_MAX = 20;
+function load(seed, replay) {
+  initAudio(); ac.resume();
+  if (!replay) {
+    hist = hist.slice(0, hpos + 1);
+    hist.push(seed);
+    if (hist.length > HIST_MAX) hist.shift();
+    hpos = hist.length - 1;
+  }
+  patch = genPatch(seed); override.fill(0);
+  wireTracks(); render();
+  if (!running) start(); else step = 0;
+}
+function histGo(d) {
+  const i = hpos + d;
+  if (i < 0 || i >= hist.length) return;
+  hpos = i; load(hist[i], true);
+}
+function start() {
+  if (!patch) return load(Math.floor(Math.random() * 4294967296));
+  initAudio(); ac.resume();
+  running = true; step = 0; nextTime = ac.currentTime + .05;
+  timer = setInterval(scheduler, 25);
+  $("run").textContent = "stop";
+}
+function halt() {
+  running = false; clearInterval(timer); $("run").textContent = "play";
+}
+addEventListener("keydown", e => {
+  if (e.code === "Space") { e.preventDefault(); $("big").click(); }
+  if (e.key === "r" && !/input|select/i.test(e.target.tagName)) $("rec").click();
+  if (e.key === "ArrowLeft") { e.preventDefault(); histGo(-1); }
+  if (e.key === "ArrowRight") { e.preventDefault(); histGo(1); }
+  if (e.key >= "1" && e.key <= "4" && patch) {
+    const t = patch.tracks[+e.key - 1]; t.mute = !t.mute; render();
+  }
+});
+
+/* ---------- midi in ----------
+   ch1: cc7 volume, cc91 reverb, cc9 scale, notes = tonic
+   ch2-5: take over track 1-4 (its sequence stops)
+   ch6-9: solo track 1-4 (all sequences stop)                        */
+const override = [0, 0, 0, 0];
+const held = {};                               // "channel:note" -> voice handle
+const HOLD = 60;                               // seconds; released on note-off
+
+if (navigator.requestMIDIAccess) navigator.requestMIDIAccess().then(m => {
+  $("midi").className = "on";
+  $("midi").textContent = "midi: " + (m.inputs.size || 0) + " in";
+  m.inputs.forEach(i => i.onmidimessage = onMidi);
+}, () => $("midi").textContent = "midi: denied");
+
+function onMidi(ev) {
+  if (!patch) return;
+  const [st, a, b] = ev.data, ch = st & 15, cmd = st & 240;
+  const trk = ch >= 1 && ch <= 4 ? ch - 1 : ch >= 5 && ch <= 8 ? ch - 5 : -1;
+  const solo = ch >= 5 && ch <= 8;
+  if (cmd === 128 || (cmd === 144 && !b)) {           // note-off, or note-on at velocity 0
+    release(held[ch + ":" + a], ac.currentTime);
+    delete held[ch + ":" + a];
+    return;
+  }
+  if (cmd === 144 && b > 0) {
+    initAudio(); ac.resume();
+    if (ch === 0) { tonic = a % 12; $("tonic").value = tonic; return; }
+    if (trk < 0) return;
+    if (solo) { patch.tracks.forEach((_, i) => override[i] = 1); }
+    else override[trk] = 1;
+    const tr = patch.tracks[trk];
+    release(held[ch + ":" + a], ac.currentTime);      // retrigger the same key cleanly
+    held[ch + ":" + a] = play[tr.engine](ac.currentTime, mtof(a), HOLD, b / 127, tr.out, tr.p);
+  }
+  if (cmd === 176) {
+    if (a === 7) { const g = ch === 0 ? master : patch.tracks[trk]?.out; if (g) g.gain.value = b / 127; }
+    if (a === 91) { const g = ch === 0 ? revOut : patch.tracks[trk]?.snd; if (g) g.gain.value = b / 127; }
+    if (a === 74 && ch === 0) { cut.value = b / 127; setCut(); }
+    if (a === 71 && ch === 0) { res.value = b / 127; setRes(); }
+    if (a === 9 && ch === 0) { patch.scale = SCALE_NAMES[Math.min(19, Math.floor(b / 128 * 20))]; render(); }
+    if (a === 123) {                                  // all notes off
+      Object.keys(held).forEach(k => { release(held[k], ac.currentTime); delete held[k]; });
+      override.fill(0);
+    }
+  }
+}
+
+/* ---------- recorder ----------
+   ScriptProcessor is deprecated but works everywhere and needs no worklet
+   file, which a page opened from disk cannot always load. 16-bit wav so the
+   take drops straight into a DAW.                                        */
+let recNode = null, recChunks = null, recStart = 0, recTick = null;
+const REC_MAX = 600;                                  // seconds, then it stops itself
+
+function recStop() {
+  if (!recNode) return;
+  recNode.disconnect(); recNode.onaudioprocess = null; recNode = null;
+  clearInterval(recTick);
+  $("rec").classList.remove("on"); $("rec").innerHTML = "&#9679; record";
+  const wav = encodeWav(recChunks, ac.sampleRate);
+  recChunks = null;
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(wav);
+  a.download = "eph-" + patch.seed + "-" + new Date().toISOString().slice(11, 19).replace(/:/g, "") + ".wav";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 30000);
+  $("rect").textContent = "saved " + (wav.size / 1048576).toFixed(1) + " MB";
+}
+function recStartFn() {
+  initAudio(); ac.resume();
+  recChunks = [[], []];
+  recNode = ac.createScriptProcessor(4096, 2, 2);
+  recNode.onaudioprocess = e => {
+    for (let c = 0; c < 2; c++) recChunks[c].push(new Float32Array(e.inputBuffer.getChannelData(c)));
+  };
+  const sink = ac.createGain(); sink.gain.value = 0;   // a ScriptProcessor is only pulled if it reaches the output
+  lim.connect(recNode); recNode.connect(sink); sink.connect(ac.destination);
+  recStart = ac.currentTime;
+  $("rec").classList.add("on"); $("rec").innerHTML = "&#9632; stop";
+  recTick = setInterval(() => {
+    const t = ac.currentTime - recStart;
+    if (t >= REC_MAX) return recStop();
+    $("rect").textContent = Math.floor(t / 60) + ":" + String(Math.floor(t % 60)).padStart(2, "0");
+  }, 250);
+}
+$("rec").onclick = e => { e.target.blur(); recNode ? recStop() : recStartFn(); };
+
+function encodeWav(ch, rate) {
+  const n = ch[0].reduce((a, b) => a + b.length, 0);
+  const buf = new ArrayBuffer(44 + n * 4), v = new DataView(buf);
+  const str = (o, t) => [...t].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  str(0, "RIFF"); v.setUint32(4, 36 + n * 4, true); str(8, "WAVEfmt ");
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 2, true);
+  v.setUint32(24, rate, true); v.setUint32(28, rate * 4, true);
+  v.setUint16(32, 4, true); v.setUint16(34, 16, true);
+  str(36, "data"); v.setUint32(40, n * 4, true);
+  let o = 44;
+  for (let b = 0; b < ch[0].length; b++) {
+    const l = ch[0][b], r = ch[1][b];
+    for (let i = 0; i < l.length; i++) {
+      v.setInt16(o, Math.max(-1, Math.min(1, l[i])) * 32767, true);
+      v.setInt16(o + 2, Math.max(-1, Math.min(1, r[i])) * 32767, true);
+      o += 4;
+    }
+  }
+  return new Blob([buf], { type: "audio/wav" });
+}
+
+/* boot */
+load(Math.floor(Math.random() * 4294967296));
+halt();                 // wait for first press (autoplay policy)
+render();
+</script>
+</body>
+</html>
