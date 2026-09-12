@@ -522,18 +522,18 @@ button.hw-btn.rec.active {
 
 .roll-lock-row {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 6px;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 5px;
 }
 .roll-btn {
   background: var(--panel);
   border: 1px solid var(--line);
   color: #fff;
-  padding: 6px 8px;
+  padding: 5px 6px;
   font-family: 'Chakra Petch', sans-serif;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: .1em;
+  letter-spacing: .08em;
   text-transform: uppercase;
   border-radius: 4px;
   cursor: pointer;
@@ -541,7 +541,16 @@ button.hw-btn.rec.active {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 3px;
+  white-space: nowrap;
+}
+.roll-btn.sound-roll {
+  border-color: rgba(255, 157, 0, 0.4);
+  color: #ffb84d;
+}
+.roll-btn.sound-roll:hover {
+  border-color: #ff9d00;
+  background: rgba(255, 157, 0, 0.12);
 }
 .roll-btn:hover { border-color: #777; }
 .roll-btn:active { transform: translateY(1px); }
@@ -858,6 +867,11 @@ kbd {
               <option value="GLITCH / IDM">GLITCH / IDM</option>
               <option value="LO-FI / TAPE">LO-FI / TAPE</option>
               <option value="SYNTHWAVE">SYNTHWAVE</option>
+              <option value="ACOUSTIC JAZZ">ACOUSTIC JAZZ</option>
+              <option value="INDUSTRIAL METAL">INDUSTRIAL METAL</option>
+              <option value="TRIBAL AFRO">TRIBAL AFRO</option>
+              <option value="MODULAR BUCHLA">MODULAR BUCHLA</option>
+              <option value="DRILL / TRAP 2026">DRILL / TRAP 2026</option>
             </select>
           </div>
           <div style="display:flex; align-items:center; gap:5px;">
@@ -875,7 +889,8 @@ kbd {
           <span id="poly0">16 steps</span>
         </div>
         <div class="roll-lock-row">
-          <button class="roll-btn" id="roll0">🎲 ROLL DRUMS</button>
+          <button class="roll-btn" id="roll0" title="Re-roll drum rhythm pattern">🎲 PAT</button>
+          <button class="roll-btn sound-roll" id="rollSound0" title="Re-roll drum kit & sound">🔊 SOUND</button>
           <button class="hw-btn" id="mute0" style="padding:2px 6px; font-size:9px;">MUTE</button>
         </div>
       </div>
@@ -909,9 +924,14 @@ kbd {
             <select id="bank1" class="bank-select" title="Select Bass Sound Bank">
               <option value="acid">TB-303 ACID</option>
               <option value="subtractive">ANALOG SUB</option>
+              <option value="dub_sub">DUB REGGAE SUB</option>
               <option value="fm">FM 2-OP BASS</option>
+              <option value="chiptune">8-BIT NES BASS</option>
+              <option value="wavetable">NEURO WAVETABLE</option>
               <option value="karplus">KARPLUS PLUCK</option>
+              <option value="brass">SYNTH BRASS BASS</option>
               <option value="additive">ADDITIVE SINE</option>
+              <option value="ambient_drone">SUB DRONE</option>
             </select>
           </div>
           <div style="display:flex; align-items:center; gap:5px;">
@@ -929,7 +949,8 @@ kbd {
           <span id="poly1">8 steps</span>
         </div>
         <div class="roll-lock-row">
-          <button class="roll-btn" id="roll1">⚡ ROLL BASS</button>
+          <button class="roll-btn" id="roll1" title="Re-roll bassline pattern">🎲 PAT</button>
+          <button class="roll-btn sound-roll" id="rollSound1" title="Re-roll bass engine & sound">🔊 SOUND</button>
           <button class="hw-btn" id="mute1" style="padding:2px 6px; font-size:9px;">MUTE</button>
         </div>
       </div>
@@ -956,11 +977,16 @@ kbd {
           <div style="display:flex; align-items:center; gap:5px;">
             <span style="font-size:9px; color:var(--dim); font-weight:700;">VOICE:</span>
             <select id="bank2" class="bank-select" title="Select Chord Sound Bank">
+              <option value="rhodes">RHODES EP</option>
+              <option value="organ">DRAWBAR ORGAN</option>
               <option value="supersaw">SUPERSAW PAD</option>
+              <option value="ambient_drone">SHIMMER DRONE</option>
+              <option value="subtractive">ANALOG WARM PAD</option>
               <option value="speech">SPEECH CHOIR</option>
-              <option value="additive">ADDITIVE CHIME</option>
-              <option value="subtractive">ANALOG POLY</option>
               <option value="fm">FM GLASSPHONE</option>
+              <option value="marimba">WOOD MARIMBA</option>
+              <option value="brass">SYNTH BRASS SECTION</option>
+              <option value="additive">ADDITIVE CHIME</option>
             </select>
           </div>
           <div style="display:flex; align-items:center; gap:5px;">
@@ -978,7 +1004,8 @@ kbd {
           <span id="poly2">12 steps · poly</span>
         </div>
         <div class="roll-lock-row">
-          <button class="roll-btn" id="roll2">🎹 ROLL CHORD</button>
+          <button class="roll-btn" id="roll2" title="Re-roll chord harmony pattern">🎲 PAT</button>
+          <button class="roll-btn sound-roll" id="rollSound2" title="Re-roll chord engine & sound">🔊 SOUND</button>
           <button class="hw-btn" id="mute2" style="padding:2px 6px; font-size:9px;">MUTE</button>
         </div>
       </div>
@@ -1006,12 +1033,15 @@ kbd {
             <span style="font-size:9px; color:var(--dim); font-weight:700;">BANK:</span>
             <select id="bank3" class="bank-select" title="Select Lead Sound Bank">
               <option value="fm">FM 2-OP BELL</option>
-              <option value="speech">SPEECH TALKBOX</option>
+              <option value="acid">TB-303 SCREAM</option>
               <option value="supersaw">SUPERSAW RAVE</option>
-              <option value="acid">TB-303 ACID</option>
-              <option value="karplus">KARPLUS STRING</option>
-              <option value="subtractive">ANALOG MONO</option>
-              <option value="additive">ADDITIVE BELL</option>
+              <option value="chiptune">8-BIT ARPEGGIO</option>
+              <option value="marimba">WOODEN MALLET</option>
+              <option value="rhodes">TINE SOLO</option>
+              <option value="organ">ROTARY ORGAN</option>
+              <option value="brass">SOLO BRASS HORN</option>
+              <option value="speech">VOCAL TALKBOX</option>
+              <option value="karplus">HARP / KOTO PLUCK</option>
             </select>
           </div>
           <div style="display:flex; align-items:center; gap:5px;">
@@ -1029,7 +1059,8 @@ kbd {
           <span id="poly3">15 steps</span>
         </div>
         <div class="roll-lock-row">
-          <button class="roll-btn" id="roll3">🎛️ ROLL LEAD</button>
+          <button class="roll-btn" id="roll3" title="Re-roll lead motif pattern">🎲 PAT</button>
+          <button class="roll-btn sound-roll" id="rollSound3" title="Re-roll lead engine & sound">🔊 SOUND</button>
           <button class="hw-btn" id="mute3" style="padding:2px 6px; font-size:9px;">MUTE</button>
         </div>
       </div>
@@ -1404,6 +1435,211 @@ const play = {
     const e = env(g, t, dur, vel * .22, .01, p.dec || 0.25, p.sus || 0.4, p.rel || 0.2);
     os.forEach(o => o.start(t)); stop(os, e);
     return { g, nodes: os, rel: p.rel || 0.2 };
+  },
+  rhodes(t, f, dur, vel, out, p) {
+    if (!out) return;
+    const g = ac.createGain();
+    const o1 = ac.createOscillator(), g1 = ac.createGain();
+    const o2 = ac.createOscillator(), g2 = ac.createGain();
+    const tine = ac.createOscillator(), tg = ac.createGain();
+    const trem = ac.createOscillator(), tremG = ac.createGain();
+
+    o1.type = "sine"; o1.frequency.value = f;
+    o2.type = "sine"; o2.frequency.value = f * 2;
+    tine.type = "sine"; tine.frequency.value = f * (p.ratio || 4.25);
+
+    trem.frequency.value = 4.5 + (p.inh || 0) * 200;
+    tremG.gain.value = 0.15;
+    trem.connect(tremG); tremG.connect(g.gain);
+
+    g1.gain.setValueAtTime(0.7, t);
+    g2.gain.setValueAtTime(0.25, t);
+    tg.gain.setValueAtTime(vel * 0.45, t);
+    tg.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+
+    o1.connect(g1); g1.connect(g);
+    o2.connect(g2); g2.connect(g);
+    tine.connect(tg); tg.connect(g);
+    g.connect(out);
+
+    const e = env(g, t, dur, vel * 0.35, 0.005, p.dec || 0.4, p.sus || 0.3, p.rel || 0.25);
+    const nodes = [o1, o2, tine, trem];
+    nodes.forEach(n => n.start(t));
+    stop(nodes, e);
+    return { g, nodes, rel: p.rel || 0.25 };
+  },
+  organ(t, f, dur, vel, out, p) {
+    if (!out) return;
+    const g = ac.createGain(), nodes = [];
+    const drawbars = [1, 2, 3, 4];
+    const amps = [0.8, 0.6, 0.35, 0.2];
+    const flt = ac.createBiquadFilter();
+    flt.type = "lowpass"; flt.frequency.value = Math.min(12000, f * 8);
+
+    const leslie = ac.createOscillator(), lG = ac.createGain();
+    leslie.frequency.value = 5.8;
+    lG.gain.value = 3.5;
+    leslie.connect(lG);
+
+    drawbars.forEach((mult, i) => {
+      const o = ac.createOscillator(), og = ac.createGain();
+      o.type = "sine";
+      o.frequency.value = f * mult;
+      lG.connect(o.frequency);
+      og.gain.value = amps[i];
+      o.connect(og); og.connect(flt);
+      nodes.push(o);
+    });
+
+    const click = ac.createOscillator(), cg = ac.createGain();
+    click.type = "triangle"; click.frequency.value = 880;
+    cg.gain.setValueAtTime(vel * 0.3, t);
+    cg.gain.exponentialRampToValueAtTime(0.0001, t + 0.012);
+    click.connect(cg); cg.connect(flt);
+    nodes.push(click, leslie);
+
+    flt.connect(g); g.connect(out);
+    const e = env(g, t, dur, vel * 0.22, 0.008, 0.05, 0.9, 0.08);
+    nodes.forEach(n => n.start(t));
+    stop(nodes, e);
+    return { g, nodes, rel: 0.08 };
+  },
+  wavetable(t, f, dur, vel, out, p) {
+    if (!out) return;
+    const g = ac.createGain(), flt = ac.createBiquadFilter();
+    const ws = ac.createWaveShaper();
+    const n = 512, curve = new Float32Array(n);
+    const drive = 2 + (p.index || 3) * 3;
+    for (let i = 0; i < n; i++) {
+      const x = (i / (n - 1)) * 2 - 1;
+      curve[i] = Math.sin(x * Math.PI * 0.5 * drive) * 0.8;
+    }
+    ws.curve = curve; ws.oversample = "2x";
+
+    const o1 = ac.createOscillator(), o2 = ac.createOscillator();
+    o1.type = "triangle"; o1.frequency.value = f;
+    o2.type = "sawtooth"; o2.frequency.value = f * 1.004;
+
+    flt.type = "lowpass"; flt.Q.value = p.q || 4;
+    const sweep = f * (3 + (p.co || 1) * 4);
+    flt.frequency.setValueAtTime(sweep, t);
+    flt.frequency.exponentialRampToValueAtTime(Math.max(120, f * 1.5), t + dur);
+
+    o1.connect(ws); o2.connect(ws);
+    ws.connect(flt); flt.connect(g); g.connect(out);
+
+    const e = env(g, t, dur, vel * 0.28, 0.01, p.dec || 0.2, p.sus || 0.5, p.rel || 0.18);
+    o1.start(t); o2.start(t);
+    stop([o1, o2], e);
+    return { g, nodes: [o1, o2], rel: p.rel || 0.18 };
+  },
+  marimba(t, f, dur, vel, out, p) {
+    if (!out) return;
+    const g = ac.createGain();
+    const o1 = ac.createOscillator(), g1 = ac.createGain();
+    const o2 = ac.createOscillator(), g2 = ac.createGain();
+    o1.type = "sine"; o1.frequency.setValueAtTime(f, t);
+    o2.type = "sine"; o2.frequency.setValueAtTime(f * 3.98, t);
+
+    const s = noise();
+    if (s) {
+      const nf = ac.createBiquadFilter(), ng = ac.createGain();
+      nf.type = "bandpass"; nf.frequency.value = Math.min(10000, f * 5); nf.Q.value = 6;
+      ng.gain.setValueAtTime(vel * 0.5, t);
+      ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.015);
+      s.connect(nf); nf.connect(ng); ng.connect(g);
+      s.start(t); s.stop(t + 0.02);
+    }
+
+    g1.gain.setValueAtTime(vel * 0.55, t);
+    g1.gain.exponentialRampToValueAtTime(0.0001, t + Math.min(1.8, dur + 0.4));
+    g2.gain.setValueAtTime(vel * 0.3, t);
+    g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+
+    o1.connect(g1); g1.connect(g);
+    o2.connect(g2); g2.connect(g);
+    g.connect(out);
+
+    const e = env(g, t, dur, vel * 0.4, 0.002, 0.15, 0.2, 0.25);
+    o1.start(t); o2.start(t);
+    stop([o1, o2], e);
+    return { g, nodes: [o1, o2], rel: 0.25 };
+  },
+  chiptune(t, f, dur, vel, out, p) {
+    if (!out) return;
+    const o = ac.createOscillator(), flt = ac.createBiquadFilter(), g = ac.createGain();
+    o.type = "square";
+    const arp = [0, 4, 7, 12];
+    const arpRate = 0.022;
+    for (let i = 0; i < 4; i++) {
+      const semi = arp[i % arp.length];
+      o.frequency.setValueAtTime(f * Math.pow(2, semi / 12), t + i * arpRate);
+    }
+    o.frequency.setValueAtTime(f, t + 4 * arpRate);
+
+    flt.type = "lowpass"; flt.frequency.value = 8500;
+    o.connect(flt); flt.connect(g); g.connect(out);
+
+    const e = env(g, t, dur, vel * 0.24, 0.002, 0.08, 0.6, 0.06);
+    o.start(t); stop([o], e);
+    return { g, nodes: [o], rel: 0.06 };
+  },
+  brass(t, f, dur, vel, out, p) {
+    if (!out) return;
+    const g = ac.createGain(), flt = ac.createBiquadFilter(), os = [];
+    flt.type = "lowpass"; flt.Q.value = 3;
+
+    const baseCut = f * 1.5;
+    const peakCut = Math.min(12000, f * (4 + (p.co || 1) * 4));
+    flt.frequency.setValueAtTime(baseCut, t);
+    flt.frequency.linearRampToValueAtTime(peakCut, t + 0.06);
+    flt.frequency.exponentialRampToValueAtTime(Math.max(180, baseCut * 1.8), t + dur);
+
+    [-7, 7].forEach(c => {
+      const o = ac.createOscillator();
+      o.type = "sawtooth";
+      o.frequency.value = f;
+      o.detune.value = c;
+      o.connect(flt);
+      os.push(o);
+    });
+
+    flt.connect(g); g.connect(out);
+    const e = env(g, t, dur, vel * 0.28, 0.04, 0.2, 0.7, 0.18);
+    os.forEach(o => o.start(t));
+    stop(os, e);
+    return { g, nodes: os, rel: 0.18 };
+  },
+  ambient_drone(t, f, dur, vel, out, p) {
+    if (!out) return;
+    const g = ac.createGain(), flt = ac.createBiquadFilter(), os = [];
+    flt.type = "lowpass"; flt.frequency.value = Math.min(9000, f * 6);
+    [1, 2, 3].forEach((mult, idx) => {
+      const o = ac.createOscillator(), og = ac.createGain();
+      o.type = idx === 0 ? "triangle" : "sine";
+      o.frequency.value = f * mult;
+      o.detune.value = (Math.random() - 0.5) * 12;
+      og.gain.value = 1 / (idx + 1);
+      o.connect(og); og.connect(flt);
+      os.push(o);
+    });
+    flt.connect(g); g.connect(out);
+    const e = env(g, t, dur, vel * 0.2, 0.12, 0.35, 0.85, 0.45);
+    os.forEach(o => o.start(t));
+    stop(os, e);
+    return { g, nodes: os, rel: 0.45 };
+  },
+  dub_sub(t, f, dur, vel, out, p) {
+    if (!out) return;
+    const o = ac.createOscillator(), flt = ac.createBiquadFilter(), g = ac.createGain();
+    o.type = "sine";
+    o.frequency.setValueAtTime(f * 1.35, t);
+    o.frequency.exponentialRampToValueAtTime(f, t + 0.04);
+    flt.type = "lowpass"; flt.frequency.value = Math.min(320, f * 2.5); flt.Q.value = 2;
+    o.connect(flt); flt.connect(g); g.connect(out);
+    const e = env(g, t, dur, vel * 0.48, 0.008, 0.15, 0.85, 0.12);
+    o.start(t); stop([o], e);
+    return { g, nodes: [o], rel: 0.12 };
   }
 };
 
@@ -1658,6 +1894,265 @@ const DrumSynthesizer = {
       o.connect(g); g.connect(out);
       o.start(t); o.stop(t + 0.2);
     }
+  },
+  "ACOUSTIC JAZZ": {
+    kick(t, vel, out) {
+      if (!out) return;
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = "sine"; o.frequency.setValueAtTime(95, t);
+      o.frequency.exponentialRampToValueAtTime(45, t + 0.09);
+      g.gain.setValueAtTime(vel * 1.1, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+      o.connect(g); g.connect(out);
+      o.start(t); o.stop(t + 0.3);
+    },
+    snare(t, vel, out) {
+      if (!out) return;
+      const s = noise();
+      if (s) {
+        const bp = ac.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 1800; bp.Q.value = 1.0;
+        const g = ac.createGain();
+        g.gain.setValueAtTime(vel * 0.65, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+        s.connect(bp); bp.connect(g); g.connect(out);
+        s.start(t); s.stop(t + 0.24);
+      }
+      const o = ac.createOscillator(), og = ac.createGain();
+      o.type = "triangle"; o.frequency.value = 160;
+      og.gain.setValueAtTime(vel * 0.4, t);
+      og.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+      o.connect(og); og.connect(out);
+      o.start(t); o.stop(t + 0.09);
+    },
+    hat(t, vel, out) {
+      if (!out) return;
+      const s = noise(); if (!s) return;
+      const hp = ac.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 6500;
+      const bp = ac.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 9800; bp.Q.value = 5;
+      const g = ac.createGain();
+      g.gain.setValueAtTime(vel * 0.45, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+      s.connect(hp); hp.connect(bp); bp.connect(g); g.connect(out);
+      s.start(t); s.stop(t + 0.14);
+    },
+    perc(t, vel, out) {
+      if (!out) return;
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = "triangle"; o.frequency.value = 1850;
+      g.gain.setValueAtTime(vel * 0.6, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.025);
+      o.connect(g); g.connect(out);
+      o.start(t); o.stop(t + 0.03);
+    }
+  },
+  "INDUSTRIAL METAL": {
+    kick(t, vel, out) {
+      if (!out) return;
+      const o = ac.createOscillator(), ws = ac.createWaveShaper(), g = ac.createGain();
+      const n = 256, curve = new Float32Array(n);
+      for (let i = 0; i < n; i++) {
+        const x = (i / (n - 1)) * 2 - 1;
+        curve[i] = Math.tanh(x * 6);
+      }
+      ws.curve = curve;
+      o.type = "triangle"; o.frequency.setValueAtTime(240, t);
+      o.frequency.exponentialRampToValueAtTime(38, t + 0.07);
+      g.gain.setValueAtTime(vel * 1.25, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+      o.connect(ws); ws.connect(g); g.connect(out);
+      o.start(t); o.stop(t + 0.24);
+    },
+    snare(t, vel, out) {
+      if (!out) return;
+      const s = noise();
+      if (s) {
+        const hp = ac.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 1500;
+        const g = ac.createGain();
+        g.gain.setValueAtTime(vel * 0.9, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+        s.connect(hp); hp.connect(g); g.connect(out);
+        s.start(t); s.stop(t + 0.2);
+      }
+      [580, 1220].forEach(f => {
+        const o = ac.createOscillator(), og = ac.createGain();
+        o.type = "sine"; o.frequency.value = f;
+        og.gain.setValueAtTime(vel * 0.5, t);
+        og.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+        o.connect(og); og.connect(out);
+        o.start(t); o.stop(t + 0.16);
+      });
+    },
+    hat(t, vel, out) {
+      if (!out) return;
+      const s = noise(); if (!s) return;
+      const bp = ac.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 7800; bp.Q.value = 6;
+      const g = ac.createGain();
+      g.gain.setValueAtTime(vel * 0.7, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+      s.connect(bp); bp.connect(g); g.connect(out);
+      s.start(t); s.stop(t + 0.05);
+    },
+    perc(t, vel, out) {
+      if (!out) return;
+      const o1 = ac.createOscillator(), o2 = ac.createOscillator(), g = ac.createGain();
+      o1.type = "sine"; o1.frequency.value = 520;
+      o2.type = "sine"; o2.frequency.value = 1440;
+      g.gain.setValueAtTime(vel * 0.75, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+      o1.connect(g); o2.connect(g); g.connect(out);
+      o1.start(t); o2.start(t);
+      o1.stop(t + 0.32); o2.stop(t + 0.32);
+    }
+  },
+  "TRIBAL AFRO": {
+    kick(t, vel, out) {
+      if (!out) return;
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = "sine"; o.frequency.setValueAtTime(110, t);
+      o.frequency.exponentialRampToValueAtTime(40, t + 0.12);
+      g.gain.setValueAtTime(vel * 1.2, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
+      o.connect(g); g.connect(out);
+      o.start(t); o.stop(t + 0.35);
+    },
+    snare(t, vel, out) {
+      if (!out) return;
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = "sine"; o.frequency.setValueAtTime(160, t);
+      o.frequency.exponentialRampToValueAtTime(260, t + 0.06);
+      o.frequency.exponentialRampToValueAtTime(130, t + 0.18);
+      g.gain.setValueAtTime(vel * 0.85, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+      o.connect(g); g.connect(out);
+      o.start(t); o.stop(t + 0.22);
+    },
+    hat(t, vel, out) {
+      if (!out) return;
+      const s = noise(); if (!s) return;
+      const bp = ac.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 5200; bp.Q.value = 2;
+      const g = ac.createGain();
+      g.gain.setValueAtTime(vel * 0.55, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+      s.connect(bp); bp.connect(g); g.connect(out);
+      s.start(t); s.stop(t + 0.08);
+    },
+    perc(t, vel, out) {
+      if (!out) return;
+      const o = ac.createOscillator(), flt = ac.createBiquadFilter(), g = ac.createGain();
+      o.type = "triangle"; o.frequency.value = 1240;
+      flt.type = "bandpass"; flt.frequency.value = 1240; flt.Q.value = 10;
+      g.gain.setValueAtTime(vel * 0.7, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+      o.connect(flt); flt.connect(g); g.connect(out);
+      o.start(t); o.stop(t + 0.05);
+    }
+  },
+  "MODULAR BUCHLA": {
+    kick(t, vel, out) {
+      if (!out) return;
+      const o = ac.createOscillator(), flt = ac.createBiquadFilter(), g = ac.createGain();
+      o.type = "sine"; o.frequency.setValueAtTime(120, t);
+      o.frequency.exponentialRampToValueAtTime(35, t + 0.09);
+      flt.type = "lowpass"; flt.frequency.setValueAtTime(1200, t);
+      flt.frequency.exponentialRampToValueAtTime(60, t + 0.22);
+      g.gain.setValueAtTime(vel * 1.15, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.26);
+      o.connect(flt); flt.connect(g); g.connect(out);
+      o.start(t); o.stop(t + 0.28);
+    },
+    snare(t, vel, out) {
+      if (!out) return;
+      const o = ac.createOscillator(), flt = ac.createBiquadFilter(), g = ac.createGain();
+      o.type = "triangle"; o.frequency.setValueAtTime(340, t);
+      o.frequency.exponentialRampToValueAtTime(90, t + 0.06);
+      flt.type = "bandpass"; flt.frequency.value = 1800; flt.Q.value = 3;
+      g.gain.setValueAtTime(vel * 0.85, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+      o.connect(flt); flt.connect(g); g.connect(out);
+      o.start(t); o.stop(t + 0.14);
+    },
+    hat(t, vel, out) {
+      if (!out) return;
+      const o1 = ac.createOscillator(), o2 = ac.createOscillator(), rg = ac.createGain(), g = ac.createGain();
+      o1.type = "square"; o1.frequency.value = 3800;
+      o2.type = "sine"; o2.frequency.value = 5720;
+      rg.gain.value = 0.5;
+      o2.connect(rg.gain);
+      g.gain.setValueAtTime(vel * 0.55, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+      o1.connect(rg); rg.connect(g); g.connect(out);
+      o1.start(t); o2.start(t);
+      o1.stop(t + 0.05); o2.stop(t + 0.05);
+    },
+    perc(t, vel, out) {
+      if (!out) return;
+      const c = ac.createOscillator(), m = ac.createOscillator(), mg = ac.createGain(), g = ac.createGain();
+      c.type = "sine"; c.frequency.setValueAtTime(800, t);
+      c.frequency.exponentialRampToValueAtTime(240, t + 0.1);
+      m.frequency.value = 1420;
+      mg.gain.setValueAtTime(1200, t);
+      mg.gain.exponentialRampToValueAtTime(1, t + 0.08);
+      m.connect(mg); mg.connect(c.frequency);
+      g.gain.setValueAtTime(vel * 0.7, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+      c.connect(g); g.connect(out);
+      c.start(t); m.start(t);
+      c.stop(t + 0.14); m.stop(t + 0.14);
+    }
+  },
+  "DRILL / TRAP 2026": {
+    kick(t, vel, out) {
+      if (!out) return;
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = "sine"; o.frequency.setValueAtTime(130, t);
+      o.frequency.exponentialRampToValueAtTime(38, t + 0.07);
+      o.frequency.exponentialRampToValueAtTime(32, t + 0.45);
+      g.gain.setValueAtTime(vel * 1.3, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.48);
+      o.connect(g); g.connect(out);
+      o.start(t); o.stop(t + 0.5);
+    },
+    snare(t, vel, out) {
+      if (!out) return;
+      const s = noise();
+      if (s) {
+        const hp = ac.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 2200;
+        const g = ac.createGain();
+        [0, 0.01, 0.02].forEach(dt => {
+          g.gain.setValueAtTime(vel * 0.8, t + dt);
+          g.gain.exponentialRampToValueAtTime(0.01, t + dt + 0.008);
+        });
+        g.gain.setValueAtTime(vel * 0.9, t + 0.03);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+        s.connect(hp); hp.connect(g); g.connect(out);
+        s.start(t); s.stop(t + 0.18);
+      }
+      const o = ac.createOscillator(), og = ac.createGain();
+      o.type = "triangle"; o.frequency.value = 220;
+      og.gain.setValueAtTime(vel * 0.5, t);
+      og.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+      o.connect(og); og.connect(out);
+      o.start(t); o.stop(t + 0.08);
+    },
+    hat(t, vel, out) {
+      if (!out) return;
+      const s = noise(); if (!s) return;
+      const hp = ac.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 10000;
+      const g = ac.createGain();
+      g.gain.setValueAtTime(vel * 0.65, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+      s.connect(hp); hp.connect(g); g.connect(out);
+      s.start(t); s.stop(t + 0.035);
+    },
+    perc(t, vel, out) {
+      if (!out) return;
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = "sine"; o.frequency.value = 4400;
+      g.gain.setValueAtTime(vel * 0.6, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+      o.connect(g); g.connect(out);
+      o.start(t); o.stop(t + 0.2);
+    }
   }
 };
 
@@ -1726,22 +2221,77 @@ const FX = {
 };
 
 /* ---------- Engine & FX Pools ---------- */
-const DRUM_KITS = ["808 ANALOG", "909 DANCE", "GLITCH / IDM", "LO-FI / TAPE", "SYNTHWAVE"];
+const DRUM_KITS = [
+  "808 ANALOG",
+  "909 DANCE",
+  "GLITCH / IDM",
+  "LO-FI / TAPE",
+  "SYNTHWAVE",
+  "ACOUSTIC JAZZ",
+  "INDUSTRIAL METAL",
+  "TRIBAL AFRO",
+  "MODULAR BUCHLA",
+  "DRILL / TRAP 2026"
+];
+
 const ROLE_ENGINES = {
-  bass:    ["acid", "subtractive", "fm", "karplus", "additive"],
-  chord:   ["supersaw", "speech", "additive", "subtractive", "fm"],
-  lead:    ["fm", "speech", "supersaw", "acid", "karplus", "subtractive", "additive"]
+  bass: [
+    "acid",
+    "subtractive",
+    "dub_sub",
+    "fm",
+    "chiptune",
+    "wavetable",
+    "karplus",
+    "brass",
+    "additive",
+    "ambient_drone"
+  ],
+  chord: [
+    "rhodes",
+    "organ",
+    "supersaw",
+    "ambient_drone",
+    "subtractive",
+    "speech",
+    "fm",
+    "marimba",
+    "brass",
+    "additive"
+  ],
+  lead: [
+    "fm",
+    "acid",
+    "supersaw",
+    "chiptune",
+    "marimba",
+    "rhodes",
+    "organ",
+    "brass",
+    "speech",
+    "karplus"
+  ]
 };
+
 const ENGINE_LABELS = {
-  subtractive: "SUBTRACTIVE",
-  fm:          "FM 2-OP",
-  acid:        "TB-303 ACID",
-  noise:       "NOISE",
-  speech:      "SPEECH FORMANT",
-  karplus:     "KARPLUS PLUCK",
-  supersaw:    "SUPERSAW",
-  additive:    "ADDITIVE SINE"
+  subtractive:   "ANALOG SUB",
+  fm:            "FM 2-OP",
+  acid:          "TB-303 ACID",
+  noise:         "NOISE",
+  speech:        "SPEECH FORMANT",
+  karplus:       "KARPLUS PLUCK",
+  supersaw:      "SUPERSAW",
+  additive:      "ADDITIVE SINE",
+  rhodes:        "RHODES EP",
+  organ:         "DRAWBAR ORGAN",
+  wavetable:     "NEURO WAVETABLE",
+  marimba:       "WOOD MARIMBA",
+  chiptune:      "8-BIT NES",
+  brass:         "SYNTH BRASS",
+  ambient_drone: "SHIMMER DRONE",
+  dub_sub:       "DUB REGGAE SUB"
 };
+
 const FX_LIST = ["clean", "drive", "comb", "wobble", "trem", "crush", "ring"];
 const VOICINGS = [[0, 2, 4], [0, 4], [0, 2, 4, 6], [0, 3, 5], [0, 2, 6]];
 
@@ -1754,7 +2304,7 @@ function genTrackParams(role, engine, r) {
     dec: .03 + r() * .5,
     sus: r() * .7,
     rel: .05 + r() * .6,
-    ratio: pick([.5, 1, 1.5, 2, 3, 3.5, 5, 7]),
+    ratio: pick([.5, 1, 1.5, 2, 3, 3.5, 4.25, 5, 7]),
     index: 1 + r() * 9,
     detune: 6 + r() * 30,
     vowel: Math.floor(r() * VOWELS.length),
@@ -1928,33 +2478,18 @@ function rollTrack(i) {
   const r = mulberry32(Math.floor(Math.random() * 4294967296));
   const pick = a => a[Math.floor(r() * a.length)];
   if (i === 0) {
-    tracks[0].kit = pick(DRUM_KITS);
-    tracks[0].fxName = r() < 0.35 ? pick(["drive", "crush", "comb"]) : "clean";
-    tracks[0].p = genTrackParams("perc", tracks[0].kit, r);
-    setChannelFx(0, tracks[0].fxName);
-    tracks[0].kick = euclid(16, pick([3, 4, 5]), 0);
+    tracks[0].kick = euclid(16, pick([3, 4, 4, 5]), 0);
+    tracks[0].snare = [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0];
     tracks[0].hat = euclid(16, pick([8, 12, 16]), Math.floor(r() * 2));
     tracks[0].perc = euclid(16, Math.floor(r() * 8), Math.floor(r() * 16));
   } else if (i === 1) {
-    tracks[1].engine = pick(ROLE_ENGINES.bass);
-    tracks[1].fxName = r() < 0.4 ? pick(["drive", "ring", "wobble"]) : "clean";
-    tracks[1].p = genTrackParams("bass", tracks[1].engine, r);
-    setChannelFx(1, tracks[1].fxName);
     tracks[1].steps = pick([7, 8, 8, 9, 12, 14, 16]);
     tracks[1].pattern = euclid(tracks[1].steps, Math.max(1, Math.floor(tracks[1].steps * (0.3 + r() * 0.4))), Math.floor(r() * 4));
     tracks[1].seq = melody(r, tracks[1].steps, "bass", SCALES[scale].length);
   } else if (i === 2) {
-    tracks[2].engine = pick(ROLE_ENGINES.chord);
-    tracks[2].voicing = pick(VOICINGS);
-    tracks[2].fxName = r() < 0.4 ? pick(["wobble", "comb", "trem"]) : "clean";
-    tracks[2].p = genTrackParams("chord", tracks[2].engine, r);
-    setChannelFx(2, tracks[2].fxName);
+    tracks[2].steps = pick([8, 12, 16]);
     tracks[2].pattern = euclid(tracks[2].steps, pick([2, 3, 4]), 0);
   } else if (i === 3) {
-    tracks[3].engine = pick(ROLE_ENGINES.lead);
-    tracks[3].fxName = r() < 0.4 ? pick(["comb", "drive", "trem", "ring"]) : "clean";
-    tracks[3].p = genTrackParams("lead", tracks[3].engine, r);
-    setChannelFx(3, tracks[3].fxName);
     tracks[3].steps = pick([7, 9, 11, 13, 15, 16]);
     tracks[3].pattern = euclid(tracks[3].steps, Math.max(1, Math.floor(tracks[3].steps * (0.35 + r() * 0.4))), Math.floor(r() * 4));
     tracks[3].seq = melody(r, tracks[3].steps, "lead", SCALES[scale].length);
@@ -1962,8 +2497,40 @@ function rollTrack(i) {
   saveScene(currentScene);
   renderAllPads();
   updatePolymetaLabels();
-  updateEngineUI(i);
   applyAllChannelParams();
+  auditionChannel(i, 0);
+}
+
+function rollSound(i) {
+  initAudio();
+  const r = mulberry32(Math.floor(Math.random() * 4294967296));
+  const pick = a => a[Math.floor(r() * a.length)];
+  if (i === 0) {
+    tracks[0].kit = pick(DRUM_KITS);
+    tracks[0].fxName = r() < 0.4 ? pick(FX_LIST.filter(x => x !== "clean")) : "clean";
+    tracks[0].p = genTrackParams("perc", tracks[0].kit, r);
+    setChannelFx(0, tracks[0].fxName);
+  } else if (i === 1) {
+    tracks[1].engine = pick(ROLE_ENGINES.bass);
+    tracks[1].fxName = r() < 0.45 ? pick(FX_LIST.filter(x => x !== "clean")) : "clean";
+    tracks[1].p = genTrackParams("bass", tracks[1].engine, r);
+    setChannelFx(1, tracks[1].fxName);
+  } else if (i === 2) {
+    tracks[2].engine = pick(ROLE_ENGINES.chord);
+    tracks[2].voicing = pick(VOICINGS);
+    tracks[2].fxName = r() < 0.45 ? pick(FX_LIST.filter(x => x !== "clean")) : "clean";
+    tracks[2].p = genTrackParams("chord", tracks[2].engine, r);
+    setChannelFx(2, tracks[2].fxName);
+  } else if (i === 3) {
+    tracks[3].engine = pick(ROLE_ENGINES.lead);
+    tracks[3].fxName = r() < 0.45 ? pick(FX_LIST.filter(x => x !== "clean")) : "clean";
+    tracks[3].p = genTrackParams("lead", tracks[3].engine, r);
+    setChannelFx(3, tracks[3].fxName);
+  }
+  saveScene(currentScene);
+  updateEngineUI(i);
+  applyChannelParams(i);
+  auditionChannel(i, 0);
 }
 
 function saveScene(idx) {
@@ -2383,6 +2950,12 @@ for (let i = 0; i <= 3; i++) {
     rollTrack(i);
     if (!running) startPlay();
   };
+  const sndBtn = $("rollSound" + i);
+  if (sndBtn) {
+    sndBtn.onclick = () => {
+      rollSound(i);
+    };
+  }
   $("lock" + i).onclick = (e) => {
     tracks[i].locked = !tracks[i].locked;
     e.currentTarget.classList.toggle("locked", tracks[i].locked);
@@ -2440,10 +3013,10 @@ document.querySelectorAll(".fx-pad").forEach(pad => {
 window.addEventListener("keydown", e => {
   if (e.target.tagName === "INPUT") return;
   if (e.code === "Space") { e.preventDefault(); $("bigMaster").click(); }
-  if (e.key === "1") { if (e.shiftKey) $("lock0").click(); else $("roll0").click(); }
-  if (e.key === "2") { if (e.shiftKey) $("lock1").click(); else $("roll1").click(); }
-  if (e.key === "3") { if (e.shiftKey) $("lock2").click(); else $("roll2").click(); }
-  if (e.key === "4") { if (e.shiftKey) $("lock3").click(); else $("roll3").click(); }
+  if (e.key === "1") { if (e.shiftKey) $("lock0").click(); else if (e.altKey) $("rollSound0").click(); else $("roll0").click(); }
+  if (e.key === "2") { if (e.shiftKey) $("lock1").click(); else if (e.altKey) $("rollSound1").click(); else $("roll1").click(); }
+  if (e.key === "3") { if (e.shiftKey) $("lock2").click(); else if (e.altKey) $("rollSound2").click(); else $("roll2").click(); }
+  if (e.key === "4") { if (e.shiftKey) $("lock3").click(); else if (e.altKey) $("rollSound3").click(); else $("roll3").click(); }
   if (e.key.toLowerCase() === "m") $("mutateBtn").click();
 
   if (e.key.toLowerCase() === "q") triggerPunchIn("stutter", true);
