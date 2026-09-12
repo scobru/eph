@@ -480,44 +480,115 @@ button.hw-btn.rec.active {
 .ch-engine {
   font-size: 10px;
   color: var(--dim);
-  background: var(--subpanel);
-  border: 1px solid var(--line);
-  padding: 3px 6px;
-  border-radius: 3px;
+  background: #0d0e12;
+  border: 1px solid #1e2129;
+  padding: 4px 6px;
+  border-radius: 4px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
 }
-.ch-engine b { color: #fff; font-weight: 600; }
-.engine-badge, .fx-badge {
-  color: #fff;
-  cursor: pointer;
-  padding: 1px 5px;
-  border-radius: 2px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid var(--line);
-  font-size: 9px;
+
+.ch-engine span:not([id^="poly"]) {
+  font-size: 8.5px;
   font-weight: 700;
-  letter-spacing: .05em;
-  transition: all .12s;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-}
-.engine-badge:hover, .fx-badge:hover {
-  background: #252834;
-  border-color: var(--c-lcd);
-  color: var(--c-lcd);
-}
-.fx-badge {
   color: var(--dim);
+  letter-spacing: .12em;
+  font-family: 'Chakra Petch', sans-serif;
+  text-transform: uppercase;
 }
-.fx-badge.active-fx {
-  color: var(--c-chord);
-  border-color: rgba(41, 121, 255, 0.4);
-  background: rgba(41, 121, 255, 0.1);
+
+span[id^="poly"] {
+  font-size: 8.5px;
+  color: var(--dim);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: .05em;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid #1d2028;
+  padding: 2px 5px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+/* Hardware Workstation Dropdown Selectors */
+.bank-select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: #14171f;
+  color: #f0f2eb;
+  border: 1px solid #2d3342;
+  border-radius: 3px;
+  padding: 2px 22px 2px 7px;
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  outline: none;
+  height: 22px;
+  line-height: 18px;
+  transition: border-color .15s, background-color .15s, box-shadow .15s, color .15s;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M1 1L4 4L7 1' stroke='%23797d8b' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 0 rgba(255, 255, 255, 0.03);
+  max-width: 140px;
+}
+
+.bank-select:hover {
+  border-color: #555e75;
+  background-color: #191e29;
+  color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M1 1L4 4L7 1' stroke='%23ffaa00' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.bank-select:focus {
+  border-color: var(--c-lcd);
+  box-shadow: 0 0 0 1px rgba(255, 170, 0, 0.4), inset 0 1px 2px rgba(0, 0, 0, 0.6);
+  background-color: #1b202c;
+}
+
+/* Specific styling for FX select */
+select[id^="fxSelect"] {
+  min-width: 76px;
+  max-width: 90px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  letter-spacing: .08em;
+}
+
+/* Channel role focus/hover accents */
+.channel-strip[data-role="beat"] .bank-select:hover { border-color: rgba(255, 87, 34, 0.6); }
+.channel-strip[data-role="beat"] .bank-select:focus { border-color: var(--c-beat); box-shadow: 0 0 0 1px rgba(255, 87, 34, 0.4), inset 0 1px 2px rgba(0,0,0,0.6); }
+
+.channel-strip[data-role="bass"] .bank-select:hover { border-color: rgba(255, 214, 0, 0.6); }
+.channel-strip[data-role="bass"] .bank-select:focus { border-color: var(--c-bass); box-shadow: 0 0 0 1px rgba(255, 214, 0, 0.4), inset 0 1px 2px rgba(0,0,0,0.6); }
+
+.channel-strip[data-role="chord"] .bank-select:hover { border-color: rgba(41, 121, 255, 0.6); }
+.channel-strip[data-role="chord"] .bank-select:focus { border-color: var(--c-chord); box-shadow: 0 0 0 1px rgba(41, 121, 255, 0.4), inset 0 1px 2px rgba(0,0,0,0.6); }
+
+.channel-strip[data-role="lead"] .bank-select:hover { border-color: rgba(0, 230, 118, 0.6); }
+.channel-strip[data-role="lead"] .bank-select:focus { border-color: var(--c-lead); box-shadow: 0 0 0 1px rgba(0, 230, 118, 0.4), inset 0 1px 2px rgba(0,0,0,0.6); }
+
+/* Custom styled Option tags for dark dropdown menu */
+.bank-select option {
+  background-color: #12141a;
+  color: #e0e3ed;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 6px 10px;
+}
+
+.bank-select option:checked {
+  background-color: #232836;
+  color: var(--c-lcd);
+  font-weight: 700;
 }
 
 .roll-lock-row {
@@ -2352,7 +2423,10 @@ function updateEngineUI(ch) {
   }
   if (fxSel) {
     fxSel.value = tr.fxName || "clean";
-    fxSel.style.color = tr.fxName && tr.fxName !== "clean" ? "var(--c-chord)" : "#fff";
+    const isActive = tr.fxName && tr.fxName !== "clean";
+    fxSel.style.color = isActive ? "var(--c-chord)" : "var(--dim)";
+    fxSel.style.borderColor = isActive ? "rgba(41, 121, 255, 0.55)" : "#2d3342";
+    fxSel.style.backgroundColor = isActive ? "#161b26" : "#14171f";
   }
 }
 
