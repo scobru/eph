@@ -8,9 +8,10 @@ const fs = require("fs");
 const src = fs.readFileSync(__dirname + "/index.html", "utf8");
 const a = src.indexOf("// >>> MUSIC"), b = src.indexOf("// <<< MUSIC");
 if (a < 0 || b < 0) throw new Error("MUSIC markers missing from index.html");
-const { mulberry32, SCALES, SCALE_NAMES, mtof, euclid, melody, noteFor } =
+const { mulberry32, SCALES, SCALE_NAMES, STYLES, STYLE_NAMES, mtof, euclid, melody, noteFor, modeOf, progression } =
   new Function(src.slice(a, b) +
-    "return {mulberry32,SCALES,SCALE_NAMES,mtof,euclid,melody,noteFor};")();
+    "return {mulberry32,SCALES,SCALE_NAMES,STYLES,STYLE_NAMES,mtof,euclid,melody,noteFor,modeOf,progression};")();
+const IV = STYLES.dreamy.iv;
 
 let n = 0;
 const test = (name, fn) => { fn(); n++; console.log("  ok  " + name); };
@@ -85,7 +86,7 @@ test("melody fills the pattern and stays inside two octaves", () => {
   for (const role of ["lead", "harmony", "bass", "perc"])
     for (let seed = 0; seed < 200; seed++) {
       const nDeg = SCALES[SCALE_NAMES[seed % 20]].length;
-      const m = melody(mulberry32(seed), 16, role, nDeg);
+      const m = melody(mulberry32(seed), 16, role, nDeg, STYLES[STYLE_NAMES[seed % 4]].iv);
       assert.strictEqual(m.length, 16, role + " must fill every step");
       m.forEach(v => {
         assert.ok(Number.isInteger(v) && v >= 0 && v <= nDeg * 2,
@@ -98,7 +99,7 @@ test("melody repeats a cell instead of being white noise", () => {
   // a tiled motif must reuse pitches; random-per-step would not
   let reused = 0;
   for (let seed = 0; seed < 200; seed++) {
-    const m = melody(mulberry32(seed), 16, "lead", 7);
+    const m = melody(mulberry32(seed), 16, "lead", 7, IV);
     if (new Set(m).size < 10) reused++;
   }
   assert.ok(reused > 180, "expected motif repetition, got " + reused + "/200");
@@ -106,9 +107,35 @@ test("melody repeats a cell instead of being white noise", () => {
 
 test("bass is never a single repeated note", () => {
   for (let seed = 0; seed < 500; seed++) {
-    const m = melody(mulberry32(seed), 16, "bass", 7);
+    const m = melody(mulberry32(seed), 16, "bass", 7, IV);
     assert.ok(new Set(m).size > 1, "one-note bass at seed " + seed);
   }
+});
+
+test("noteFor wraps below the tonic for a chord shift", () => {
+  const d = SCALES.major;
+  assert.strictEqual(noteFor(d, -1, 4, 0), 47, "one step below C is B");
+  assert.strictEqual(noteFor(d, -7, 4, 0), 36, "seven steps below is an octave down");
+});
+
+test("modeOf finds the major modes and only them", () => {
+  const want = { major: 0, dorian: 1, phrygian: 2, lydian: 3, mixolydian: 4, minor: 5, locrian: 6 };
+  for (const name of SCALE_NAMES)
+    assert.strictEqual(modeOf(SCALES[name]), want[name] ?? -1, name);
+});
+
+test("progression starts home, moves on major modes, stays put elsewhere", () => {
+  let moved = 0;
+  for (const style of STYLE_NAMES)
+    for (let seed = 0; seed < 100; seed++) {
+      const p = progression(mulberry32(seed), style, SCALES[["major", "minor", "dorian"][seed % 3]]);
+      assert.strictEqual(p.length, 4);
+      assert.strictEqual(p[0], 0, "starts on the tonic");
+      p.forEach(x => assert.ok(Number.isInteger(x) && x >= -3 && x <= 3, "shift " + x));
+      if (p.some(x => x)) moved++;
+      assert.deepStrictEqual(progression(mulberry32(seed), style, SCALES.hirajoshi), [0, 0, 0, 0]);
+    }
+  assert.ok(moved > 380, "chords should change, moved " + moved + "/400");
 });
 
 test("mtof matches concert pitch", () => {

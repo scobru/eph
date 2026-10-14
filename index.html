@@ -739,6 +739,42 @@ const SCALES = {
 };
 const SCALE_NAMES = Object.keys(SCALES);
 
+// learned by distant-worlds (tools/learn-music.mjs) from 178 game-soundtrack MIDI
+// files, statistics only, no notes. per style: tempo range, chord moves between
+// the 7 degrees of the major scale (from -> to weights; minor pieces counted from
+// their relative major) and melodic interval weights in semitones.
+const STYLES = {
+  ballad: {bpm:[60,74],chords:[[0,133,99,170,141,94,46],[110,0,53,161,59,159,45],[85,73,0,85,46,121,42],[187,142,98,0,92,160,80],[96,57,46,95,0,103,25],[129,103,104,208,71,0,121],[45,70,57,46,22,123,0]],iv:{0:440,1:363,2:521,3:201,4:204,5:155,6:6,7:61,8:72,9:26,10:16,11:8,12:157,"-12":143,"-11":12,"-10":11,"-9":24,"-8":81,"-7":104,"-6":25,"-5":131,"-4":166,"-3":156,"-2":587,"-1":331}},
+  dreamy: {bpm:[82,140],chords:[[0,238,125,289,282,341,39],[212,0,106,172,138,257,58],[89,144,0,108,98,164,98],[283,151,119,0,186,197,60],[336,127,77,124,0,163,42],[333,227,177,268,144,0,65],[58,52,91,40,37,87,0]],iv:{0:968,1:510,2:824,3:366,4:278,5:266,6:51,7:153,8:67,9:54,10:25,11:9,12:151,"-12":171,"-11":9,"-10":15,"-9":45,"-8":51,"-7":124,"-6":43,"-5":242,"-4":308,"-3":350,"-2":817,"-1":504}},
+  groove: {bpm:[86,172],chords:[[0,127,53,174,100,137,34],[157,0,37,45,52,65,25],[47,27,0,49,18,90,7],[168,52,53,0,78,73,28],[142,34,27,79,0,60,9],[99,120,49,94,82,0,56],[27,12,17,11,14,76,0]],iv:{0:357,1:291,2:416,3:99,4:67,5:81,6:25,7:45,8:27,9:24,10:6,11:4,12:142,"-12":129,"-11":4,"-10":20,"-9":14,"-8":7,"-7":34,"-6":38,"-5":72,"-4":103,"-3":99,"-2":376,"-1":223}},
+  tense: {bpm:[110,163],chords:[[0,75,50,105,59,153,28],[42,0,65,99,100,363,57],[53,74,0,31,58,225,58],[109,119,42,0,101,307,74],[89,60,84,65,0,168,30],[121,338,203,384,156,0,153],[49,52,60,74,26,140,0]],iv:{0:869,1:387,2:445,3:246,4:184,5:227,6:55,7:127,8:51,9:49,10:25,11:11,12:131,"-12":178,"-11":8,"-10":4,"-9":34,"-8":36,"-7":116,"-6":44,"-5":217,"-4":196,"-3":179,"-2":481,"-1":401}}
+};
+const STYLE_NAMES = Object.keys(STYLES);
+
+// pairs [value, weight] -> one value, drawn by weight
+const weighted = (r, pairs) => {
+  let x = r() * pairs.reduce((a, p) => a + p[1], 0);
+  for (const [v, w] of pairs) if ((x -= w) < 0) return v;
+  return pairs[pairs.length - 1][0];
+};
+const pairsOf = o => Object.entries(o).map(([k, w]) => [+k, w]);
+
+// which degree of the major scale a 7-note mode starts on (dorian 1, minor 5...);
+// -1 for scales that are not a mode of major, which the learned chords do not cover
+const MAJOR = SCALES.major;
+const modeOf = deg => deg.length !== 7 ? -1 : [0, 1, 2, 3, 4, 5, 6].find(k =>
+  deg.every((x, i) => x === (MAJOR[(i + k) % 7] - MAJOR[k] + 12) % 12)) ?? -1;
+
+// four chords, one per bar, as shifts in scale steps from the tonic (-3..3, so a
+// part moves by at most a fourth). off the major modes the harmony stays home.
+function progression(r, style, deg) {
+  const k = modeOf(deg);
+  if (k < 0) return [0, 0, 0, 0];
+  const p = [k];
+  while (p.length < 4) p.push(weighted(r, STYLES[style].chords[p[p.length - 1]].map((w, to) => [to, w])));
+  return p.map(d => { const s = (d - k + 7) % 7; return s > 3 ? s - 7 : s; });
+}
+
 // euclidean rhythm (bresenham form)
 const euclid = (steps, pulses, rot) => {
   // bresenham spread, not full bjorklund — same pattern set at these sizes.
@@ -752,7 +788,7 @@ const euclid = (steps, pulses, rot) => {
 
 // motif, not white noise: a short cell, tiled, lightly varied. random notes
 // per step sound like a machine; a repeated cell sounds like a part.
-function melody(r, len, role, nDeg) {
+function melody(r, len, role, nDeg, iv) {
   if (role === "perc") return Array.from({ length: len }, () => Math.floor(r() * nDeg));
   const span = nDeg * 2, clamp = n => Math.max(0, Math.min(span, n));
   if (role === "bass") {
@@ -763,11 +799,11 @@ function melody(r, len, role, nDeg) {
     return Array.from({ length: len }, (_, i) => m[i % cell]);
   }
   const cell = [2, 3, 4, 4][Math.floor(r() * 4)];
-  const m = []; let cur = Math.floor(r() * nDeg);
+  const m = []; let cur = Math.floor(r() * nDeg), moves = pairsOf(iv);
   for (let i = 0; i < cell; i++) {
     m.push(cur);
-    const jump = r() < .8 ? (r() < .5 ? 1 : 2) : 4;  // steps mostly, leaps rarely
-    cur = clamp(cur + (r() < .5 ? -jump : jump));
+    // learned melodic interval, semitones turned into steps of this scale
+    cur = clamp(cur + Math.round(weighted(r, moves) / (12 / nDeg)));
   }
   return Array.from({ length: len }, (_, i) => {
     let n = m[i % cell];
@@ -779,10 +815,10 @@ function melody(r, len, role, nDeg) {
 
 const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
 
-// scale degree index -> midi note. indexes past the end of the scale wrap
-// upward by an octave, so a motif can span more than one octave.
+// scale degree index -> midi note. indexes past either end of the scale wrap by
+// an octave, so a motif can span more than one octave and a chord shift can go below.
 const noteFor = (deg, idx, oct, tonic) =>
-  12 * oct + tonic + deg[idx % deg.length] + 12 * Math.floor(idx / deg.length);
+  12 * oct + tonic + deg[(idx % deg.length + deg.length) % deg.length] + 12 * Math.floor(idx / deg.length);
 // <<< MUSIC
 const NOTES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 const ENGINES = ["subtractive","fm","acid","noise","speech","karplus","supersaw","additive"];
@@ -1082,7 +1118,7 @@ const HP = { bass: 25, harmony: 110, lead: 130, perc: 400 };   // carve room for
 let patch = null, tonic = 0;
 function genPatch(seed) {
   const r = mulberry32(seed), pick = a => a[Math.floor(r() * a.length)];
-  const scale = pick(SCALE_NAMES), deg = SCALES[scale];
+  const scale = pick(SCALE_NAMES), deg = SCALES[scale], style = pick(STYLE_NAMES), S = STYLES[style];
   const nTracks = 1 + Math.floor(r() * 4);
   const pool = ENGINES.slice();                      // distinct engine per track
   const tracks = ROLES.map((role, i) => {
@@ -1116,7 +1152,7 @@ function genPatch(seed) {
            : role === "lead" ? (r() < .5 ? .2 + r() * .5 : 0)
            : (r() < .3 ? r() * .35 : 0),                 // pads mask their own echoes
       pan: role === "bass" ? 0 : (r() * 2 - 1) * (role === "perc" ? .7 : .45),
-      seq: melody(r, steps, role, deg.length),
+      seq: melody(r, steps, role, deg.length, S.iv),
       p: {
         wave: pick(["sawtooth", "square", "triangle"]),
         q: 1 + r() * 9, co: (.3 + r() * 3) * (role === "bass" ? .4 : 1),
@@ -1129,8 +1165,9 @@ function genPatch(seed) {
     };
   });
   return {
-    seed, scale, tracks,
-    bpm: 70 + Math.floor(r() * 80),
+    seed, scale, style, tracks,
+    bpm: S.bpm[0] + Math.floor(r() * (S.bpm[1] - S.bpm[0] + 1)),
+    prog: progression(r, style, deg),
     swing: r() < .5 ? 0 : .04 + r() * .12,
     room: .5 + r() * 4,                      // reverb decay, seconds
     dlDiv: [.5, .75, 1, 1.5][Math.floor(r() * 4)]   // delay time, in beats
@@ -1157,8 +1194,9 @@ function scheduler() {
       const t = nextTime + swing + (Math.random() - .5) * .006;   // humanize
       const vel = Math.min(1, .5 + accent + Math.random() * .12);
       const d = SCALES[patch.scale];
+      const shift = tr.role === "perc" ? 0 : patch.prog[Math.floor(step / 16) % 4];   // this bar's chord
       (tr.poly ? tr.voicing : [0]).forEach(off => {
-        const m = noteFor(d, tr.seq[s] + off, tr.oct, tonic);
+        const m = noteFor(d, tr.seq[s] + off + shift, tr.oct, tonic);
         const drift = tr.role === "perc" ? 1 : 1 + (Math.random() - .5) * .003;  // ±2.5 cents
         play[tr.engine](t, mtof(m) * drift, dur, vel, tr.out, tr.p);
         if (tr.role === "bass" && !off) body(t, mtof(m), dur, vel, tr.out);
@@ -1227,7 +1265,7 @@ function render() {
   $("histv").textContent = hist.length ? (hpos + 1) + "/" + hist.length : "";
   $("prev").disabled = hpos <= 0;
   $("next").disabled = hpos >= hist.length - 1;
-  $("patchv").textContent = patch.tracks.filter(t => t.active).length + " voices · " + patch.scale +
+  $("patchv").textContent = patch.tracks.filter(t => t.active).length + " voices · " + patch.scale + " · " + patch.style +
     " · " + patch.bpm + " bpm" + (patch.swing ? " · swing" : "");
   bpm.value = patch.bpm; $("bpmv").textContent = patch.bpm;
   $("tracks").innerHTML = "";
