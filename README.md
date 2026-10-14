@@ -23,6 +23,14 @@ One HTML file, no dependencies, no build step. Open `index.html` and it runs.
 - **20 scales**, from major to hirajoshi to persian. The tonic survives a press.
 - **Motif-based melodies** — a short cell, tiled and varied. Random notes per
   step sound like a machine; a repeated cell sounds like a part.
+- **Learned style** — each patch draws one of four styles (ballad, dreamy,
+  groove, tense) learned from 178 game-soundtrack MIDI files by
+  [Distant Worlds](https://github.com/scobru/distant-worlds)
+  (`tools/learn-music.mjs`, statistics only, no notes): its tempo range, the
+  melodic intervals the motifs move by, and on the seven major modes (major,
+  minor, dorian…) a four-bar chord progression that carries bass, harmony and
+  lead. Other scales keep a fixed tonic. The same seed now sounds different
+  from before this change.
 - **Per-track effects** from the seed: drive/wavefolder, bitcrush, ring
   modulation, comb, filter wobble, tremolo/stutter gate.
 - **Per-track filter** (type, cutoff, resonance) plus reverb and tempo-synced
